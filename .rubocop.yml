@@ -1,0 +1,35 @@
+inherit_mode:
+  merge:
+    - Exclude
+
+require:
+  - rubocop-performance
+  - rubocop-rspec
+  - standard/cop/block_single_line_braces
+
+inherit_gem:
+  standard: config/base.yml
+
+AllCops:
+  TargetRubyVersion: 2.6
+  SuggestExtensions: false
+  Exclude:
+    - "db/**/*"
+    - "tmp/**/*"
+    - "vendor/**/*"
+
+Layout/SpaceInsideHashLiteralBraces:
+  Enabled: false
+
+Style/TrailingCommaInArguments:
+  Enabled: false
+
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+
+Style/TrailingCommaInHashLiteral:
+  Enabled: false
+
+Style/StringLiterals:
+  Enabled: true
+  EnforcedStyle: single_quotes
