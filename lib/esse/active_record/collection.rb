@@ -19,7 +19,7 @@ module Esse
 
       def scope
         query = self.class.scope&.call || raise(NotImplementedError, "No scope defined for #{self.class}")
-        query = query.except(:select, :order, :limit, :offset)
+        query = query.except(:order, :limit, :offset)
         @params.each do |key, value|
           if query.model.columns_hash.key?(key.to_s)
             query = query.where(key => value)
