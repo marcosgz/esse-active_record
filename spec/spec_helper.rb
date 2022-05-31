@@ -7,6 +7,7 @@ require 'esse/active_record'
 require 'support/class_helpers'
 require 'support/config_helpers'
 require 'support/webmock'
+require 'support/models'
 require 'pry'
 
 RSpec.configure do |config|

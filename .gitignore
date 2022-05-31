@@ -1,3 +1,6 @@
+.DS_Store
+Essefile
+
 /.bundle/
 /.yardoc
 /_yardoc/
@@ -5,4 +8,8 @@
 /doc/
 /pkg/
 /spec/reports/
+/.rspec_status
 /tmp/
+esse-*.gem
+/app
+/.env
