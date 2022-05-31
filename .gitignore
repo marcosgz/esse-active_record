@@ -13,3 +13,6 @@ Essefile
 esse-*.gem
 /app
 /.env
+.tool-versions
+.ruby-version
+
