@@ -5,7 +5,7 @@ require 'active_record'
 module Esse
   module Plugins
     module ActiveRecord
-      module ClassMethods
+      module RepositoryClassMethods
         # @param [String, Symbol] type_name The document type name
         # @param [Class] model_class The ActiveRecord Relation or model class
         # @param [Hash] options The options
