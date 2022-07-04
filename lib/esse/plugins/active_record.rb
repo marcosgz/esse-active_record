@@ -27,8 +27,7 @@ module Esse
         private
 
         def model_or_relation?(klass)
-          return false unless klass.is_a?(Class)
-          return true if klass < ::ActiveRecord::Base
+          return true if klass.is_a?(Class) && klass < ::ActiveRecord::Base
           return true if klass.is_a?(::ActiveRecord::Relation)
 
           false

@@ -10,12 +10,10 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do
           stub_index(:animals) do
             plugin :active_record
 
-            repository :animal do
-              collection Animal
-            end
+            collection Animal
           end
         }.not_to raise_error
-        expect(AnimalsIndex.repo(:animal).instance_variable_get(:@collection_proc)).to be < Esse::ActiveRecord::Collection
+        expect(AnimalsIndex.repo.instance_variable_get(:@collection_proc)).to be < Esse::ActiveRecord::Collection
       end
 
       it 'define collection with name and class name without raise an error' do
@@ -29,6 +27,17 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do
           end
         }.not_to raise_error
         expect(AnimalsIndex.repo(:cat).instance_variable_get(:@collection_proc)).to be < Esse::ActiveRecord::Collection
+      end
+
+      it 'define collection with an activerecord relation' do
+        expect {
+          stub_index(:animals) do
+            plugin :active_record
+
+            collection Animal.all
+          end
+        }.not_to raise_error
+        expect(AnimalsIndex.repo.instance_variable_get(:@collection_proc)).to be < Esse::ActiveRecord::Collection
       end
     end
   end
