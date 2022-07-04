@@ -2,8 +2,8 @@
 
 source 'https://rubygems.org'
 
-# gem 'esse', git: "https://github.com/marcosgz/esse.git", branch: "master"
-gem 'esse', path: '../esse'
+gem 'esse', git: "https://github.com/marcosgz/esse.git", branch: "master"
+# gem 'esse', path: '../esse'
 gem 'sqlite3', '~> 1.3.6'
 gem 'activerecord', '~> 4.2'
 
