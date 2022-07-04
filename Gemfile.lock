@@ -1,7 +1,5 @@
-GIT
-  remote: https://github.com/marcosgz/esse.git
-  revision: cab7e33e260e0ff90321b7ef6ee0a795f70b0442
-  branch: master
+PATH
+  remote: ../esse
   specs:
     esse (0.2.1)
       multi_json

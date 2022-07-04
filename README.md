@@ -1,8 +1,6 @@
-# Esse::ActiveRecord
+# Esse ActiveRecord Plugin
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/esse/active_record`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+This gem is a [esse](https://github.com/marcosgz/esse) plugin for the ActiveRecord ORM. It provides a set of methods to simplify implementation of ActiveRecord models as datasource of esse indexes.
 
 ## Installation
 
@@ -22,7 +20,36 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Add the `:active_record` plugin and configure the `repository` or the `collection` with the ActiveRecord model you want to use.
+
+```ruby
+class UsersIndex < Esse::Index
+  plugin :active_record
+
+  repository :user do
+    collection ::User
+    serializer # ...
+  end
+end
+```
+
+Using multiple repositories is also possible:
+
+```ruby
+class UsersIndex < Esse::Index
+  plugin :active_record
+
+  repository :account do
+    collection ::Account
+    serializer # ...
+  end
+
+  repository :admin do
+    collection ::User.where(admin: true)
+    serializer # ...
+  end
+end
+```
 
 ## Development
 
@@ -32,7 +59,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/esse-active_record.
+Bug reports and pull requests are welcome on GitHub at https://github.com/marcosgz/esse-active_record.
 
 ## License
 
