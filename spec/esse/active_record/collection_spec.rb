@@ -75,4 +75,20 @@ RSpec.describe Esse::ActiveRecord::Collection do
       end
     end
   end
+
+  describe '#dataset' do
+    it 'returns an ActiveRecord::Relation' do
+      collection = Class.new(described_class)
+      collection.scope = -> { Animal.all }
+      expect(collection.new.dataset).to be_a(::ActiveRecord::Relation)
+    end
+
+    it 'returns an ActiveRecord::Relation with a scope' do
+      collection = Class.new(described_class)
+      collection.scope = -> { Animal.where(name: 'foo') }
+
+      expect(collection.new.dataset).to be_a(::ActiveRecord::Relation)
+      expect(collection.new.dataset.to_sql).to eq(Animal.where(name: 'foo').to_sql)
+    end
+  end
 end

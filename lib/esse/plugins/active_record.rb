@@ -14,7 +14,6 @@ module Esse
             return super(*args, **kwargs, &block)
           end
           model_class = args.shift
-          type = model_class.model_name.param_key
 
           repo = Class.new(Esse::ActiveRecord::Collection)
           repo.scope = -> { model_class }
@@ -22,6 +21,18 @@ module Esse
           repo.scope_prefix = kwargs[:scope_prefix]
 
           super(repo, *args, **kwargs, &block)
+        end
+
+        def dataset(**params)
+          if @collection_proc.nil?
+            raise NotImplementedError, "Can't call `dataset' on a repository without a collection defined"
+          elsif @collection_proc.is_a?(Class) && @collection_proc < Esse::ActiveRecord::Collection
+            @collection_proc.new(**params).dataset
+          elsif defined? super
+            super
+          else
+            raise NoMethodError, "undefined method `dataset' for #{self}"
+          end
         end
 
         private

@@ -10,17 +10,15 @@ module Esse
       end
 
       def each
-        scope.find_in_batches(batch_size: batch_size) do |rows|
+        dataset.find_in_batches(batch_size: batch_size) do |rows|
           yield(rows, **@params)
         end
       end
 
-      protected
-
-      def scope
+      def dataset(**kwargs)
         query = self.class.scope&.call || raise(NotImplementedError, "No scope defined for #{self.class}")
         query = query.except(:order, :limit, :offset)
-        @params.each do |key, value|
+        @params.merge(kwargs).each do |key, value|
           if query.model.columns_hash.key?(key.to_s)
             query = query.where(key => value)
           end
@@ -28,6 +26,8 @@ module Esse
 
         query
       end
+
+      protected
 
       def prefixed_scope(name)
         [scope_prefix.presence, name].compact.join('_')
