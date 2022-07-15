@@ -91,4 +91,55 @@ RSpec.describe Esse::ActiveRecord::Collection do
       expect(collection.new.dataset.to_sql).to eq(Animal.where(name: 'foo').to_sql)
     end
   end
+
+  describe '.inspect' do
+    it 'returns the class name' do
+      expect(described_class.inspect).to eq('Esse::ActiveRecord::Collection')
+    end
+
+    context "when it's an anonymous class" do
+      it 'returns super when scope is not defined' do
+        klass = Class.new(described_class)
+        expect(klass.inspect).to match(/#<Class:.*>/)
+      end
+
+      it 'returns custom class name when scope is defined as a relation' do
+        klass = Class.new(described_class)
+        klass.scope = -> { Animal.all }
+        expect(klass.inspect).to match('#<Esse::ActiveRecord::Collection__Animal>')
+      end
+
+      it 'returns custom class name when scope is defined as a model' do
+        klass = Class.new(described_class)
+        klass.scope = -> { Animal }
+        expect(klass.inspect).to match('#<Esse::ActiveRecord::Collection__Animal>')
+      end
+    end
+  end
+
+  describe '#inspect' do
+    it 'returns the class name' do
+      expect(described_class.new.inspect).to match(/#<Esse::ActiveRecord::Collection:.*>/)
+    end
+
+    context 'when it is an anonymous class' do
+      let(:klass) do
+        Class.new(described_class)
+      end
+
+      it 'returns super when scope is not defined' do
+        expect(klass.new.inspect).to match(/#<Class:.*>/)
+      end
+
+      it 'returns custom class name when scope is defined as a relation' do
+        klass.scope = -> { Animal.all }
+        expect(klass.new.inspect).to match(/#<Esse::ActiveRecord::Collection__Animal:0x.*>/)
+      end
+
+      it 'returns custom class name when scope is defined as a model' do
+        klass.scope = -> { Animal }
+        expect(klass.new.inspect).to match(/#<Esse::ActiveRecord::Collection__Animal:0x.*>/)
+      end
+    end
+  end
 end

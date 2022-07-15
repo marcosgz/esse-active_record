@@ -9,6 +9,19 @@ module Esse
         @params = params
       end
 
+      def self.inspect
+        return super unless self < Esse::ActiveRecord::Collection
+        return super unless scope
+
+        format('#<Esse::ActiveRecord::Collection__%s>', model)
+      end
+
+      def self.model
+        reise(NotImplementedError, "No model defined for #{self}") unless scope
+
+        scope.call.all.model
+      end
+
       def each
         dataset.find_in_batches(batch_size: batch_size) do |rows|
           yield(rows, **@params)
@@ -25,6 +38,16 @@ module Esse
         end
 
         query
+      end
+
+      def inspect
+        return super unless self.class < Esse::ActiveRecord::Collection
+        return super unless self.class.scope
+
+        vars = instance_variables.map do |n|
+          "#{n}=#{instance_variable_get(n).inspect}"
+        end
+        format('#<Esse::ActiveRecord::Collection__%s:0x%x %s>', self.class.model, object_id, vars.join(', '))
       end
 
       protected

@@ -42,6 +42,21 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do
         expect(AnimalsIndex.repo.instance_variable_get(:@collection_proc)).to be < Esse::ActiveRecord::Collection
         expect(AnimalsIndex.repo.dataset).to be_a(::ActiveRecord::Relation)
       end
+
+      it 'evaluates the block in the Esse::ActiveRecord::Collection' do
+        expect {
+          stub_index(:animals) do
+            plugin :active_record
+
+            collection Animal do
+              def self.foo
+                'bar'
+              end
+            end
+          end
+        }.not_to raise_error
+        expect(AnimalsIndex.repo.instance_variable_get(:@collection_proc).foo).to eq('bar')
+      end
     end
   end
 end
