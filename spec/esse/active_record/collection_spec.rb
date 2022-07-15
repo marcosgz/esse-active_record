@@ -8,16 +8,16 @@ RSpec.describe Esse::ActiveRecord::Collection do
     end
   end
 
-  describe '.scope' do
+  describe '.base_scope' do
     it 'does not override the parent scope' do
-      described_class.scope = :foo
-      expect(described_class.scope).to eq(:foo)
+      described_class.base_scope = :foo
+      expect(described_class.base_scope).to eq(:foo)
       child = Class.new(described_class)
-      expect(child.scope).to eq(:foo)
-      child.scope = :bar
-      expect(child.scope).to eq(:bar)
-      expect(described_class.scope).to eq(:foo)
-      described_class.scope = nil
+      expect(child.base_scope).to eq(:foo)
+      child.base_scope = :bar
+      expect(child.base_scope).to eq(:bar)
+      expect(described_class.base_scope).to eq(:foo)
+      described_class.base_scope = nil
     end
   end
 
@@ -31,19 +31,23 @@ RSpec.describe Esse::ActiveRecord::Collection do
 
     it 'returns an Enumerator with a relation instance' do
       collection = Class.new(described_class)
-      collection.scope = -> { Animal.all }
+      collection.base_scope = -> { Animal.all }
       expect { |b| collection.new.each(&b) }.not_to yield_control
     end
 
     it 'returns an Enumerator with a model class' do
       collection = Class.new(described_class)
-      collection.scope = -> { Animal }
+      collection.base_scope = -> { Animal }
       expect { |b| collection.new.each(&b) }.not_to yield_control
     end
 
     context 'with filter parameters' do
       let(:dog_class) do
         Class.new(Animal) do
+          def ==(other)
+            other.id == id
+          end
+
           def self.name
             'Dog'
           end
@@ -52,7 +56,7 @@ RSpec.describe Esse::ActiveRecord::Collection do
 
       let(:collection_class) do
         klass = Class.new(described_class)
-        klass.scope = -> { Dog }
+        klass.base_scope = -> { Dog }
         klass
       end
 
@@ -68,10 +72,10 @@ RSpec.describe Esse::ActiveRecord::Collection do
       it 'filteres by existing attributes' do
         dog_foo = Dog.create!(name: 'foo')
         _dog_bar = Dog.create!(name: 'bar')
-        collection = collection_class.new(name: 'foo')
-        expect(collection.to_a.size).to eq(1)
+        instance = collection_class.new(name: 'foo')
 
-        expect { |b| collection_class.new(name: 'foo').each(&b) }.to yield_successive_args([[dog_foo], {name: 'foo'}])
+        expect(instance.to_a.size).to eq(1)
+        expect { |b| instance.each(&b) }.to yield_successive_args([[dog_foo], { name: 'foo' }])
       end
     end
   end
@@ -79,13 +83,13 @@ RSpec.describe Esse::ActiveRecord::Collection do
   describe '#dataset' do
     it 'returns an ActiveRecord::Relation' do
       collection = Class.new(described_class)
-      collection.scope = -> { Animal.all }
+      collection.base_scope = -> { Animal.all }
       expect(collection.new.dataset).to be_a(::ActiveRecord::Relation)
     end
 
     it 'returns an ActiveRecord::Relation with a scope' do
       collection = Class.new(described_class)
-      collection.scope = -> { Animal.where(name: 'foo') }
+      collection.base_scope = -> { Animal.where(name: 'foo') }
 
       expect(collection.new.dataset).to be_a(::ActiveRecord::Relation)
       expect(collection.new.dataset.to_sql).to eq(Animal.where(name: 'foo').to_sql)
@@ -105,15 +109,34 @@ RSpec.describe Esse::ActiveRecord::Collection do
 
       it 'returns custom class name when scope is defined as a relation' do
         klass = Class.new(described_class)
-        klass.scope = -> { Animal.all }
+        klass.base_scope = -> { Animal.all }
         expect(klass.inspect).to match('#<Esse::ActiveRecord::Collection__Animal>')
       end
 
       it 'returns custom class name when scope is defined as a model' do
         klass = Class.new(described_class)
-        klass.scope = -> { Animal }
+        klass.base_scope = -> { Animal }
         expect(klass.inspect).to match('#<Esse::ActiveRecord::Collection__Animal>')
       end
+    end
+  end
+
+  describe '.model' do
+    it 'returns the model class' do
+      collection = Class.new(described_class)
+      collection.base_scope = -> { Animal.all }
+      expect(collection.model).to eq(Animal)
+    end
+
+    it 'returns the model class when scope is defined as a model' do
+      collection = Class.new(described_class)
+      collection.base_scope = -> { Animal }
+      expect(collection.model).to eq(Animal)
+    end
+
+    it 'raises an error when scope is not defined' do
+      collection = Class.new(described_class)
+      expect { collection.model }.to raise_error(NotImplementedError)
     end
   end
 
@@ -132,12 +155,12 @@ RSpec.describe Esse::ActiveRecord::Collection do
       end
 
       it 'returns custom class name when scope is defined as a relation' do
-        klass.scope = -> { Animal.all }
+        klass.base_scope = -> { Animal.all }
         expect(klass.new.inspect).to match(/#<Esse::ActiveRecord::Collection__Animal:0x.*>/)
       end
 
       it 'returns custom class name when scope is defined as a model' do
-        klass.scope = -> { Animal }
+        klass.base_scope = -> { Animal }
         expect(klass.new.inspect).to match(/#<Esse::ActiveRecord::Collection__Animal:0x.*>/)
       end
     end

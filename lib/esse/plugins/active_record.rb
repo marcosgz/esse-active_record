@@ -16,9 +16,8 @@ module Esse
           model_class = args.shift
 
           repo = Class.new(Esse::ActiveRecord::Collection)
-          repo.scope = -> { model_class }
+          repo.base_scope = -> { model_class }
           repo.batch_size = kwargs[:batch_size]
-          repo.scope_prefix = kwargs[:scope_prefix]
           repo.class_eval(&block) if block
 
           super(repo, *args, **kwargs)

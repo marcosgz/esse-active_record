@@ -51,6 +51,28 @@ class UsersIndex < Esse::Index
 end
 ```
 
+It's also possible to specify custom scopes to the repository collection to be used to import data to the index:
+
+```ruby
+class UsersIndex < Esse::Index
+  plugin :active_record
+
+  repository :user do
+    collection ::User do
+      scope :active, -> { where(active: true) }
+      scope :role, ->(role) { where(role: role) }
+    end
+    serializer # ...
+  end
+end
+
+# Import data using the scopes
+#   > UsersIndex.elasticsearch.import(context: { active: true, role: 'admin' })
+# 
+# Streaming data using the scopes
+#   > UsersIndex.documents(active: true, role: 'admin').first
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake none` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
