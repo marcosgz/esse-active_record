@@ -51,6 +51,7 @@ class UsersIndex < Esse::Index
 end
 ```
 
+### Repository Scope
 It's also possible to specify custom scopes to the repository collection to be used to import data to the index:
 
 ```ruby
@@ -72,6 +73,65 @@ end
 # Streaming data using the scopes
 #   > UsersIndex.documents(active: true, role: 'admin').first
 ```
+
+### Indexing Callbacks
+
+The `esse_index` callback can be used to automaitcally index or delete documents after commit on create/update/destroy events.
+
+```ruby
+class UsersIndex < Esse::Index
+  plugin :active_record
+
+  repository :user, const: true do
+    collection ::User
+    serializer # ...
+  end
+
+end
+
+class User < ApplicationRecord
+  belongs_to :organization
+
+  # Using a index repository as argument
+  esse_index AccountsIndex::User # Or UsersIndex.repo(:user) if repository is defined with `const: false'
+  # Using a index as argument. The default repository will be used. In case of multiple repositories, one exception will be raised.
+  esse_index UsersIndex 
+  # Using a block to direct a different object to be indexed
+  esse_index(OrganizationsIndex) { user.organization }
+end
+```
+
+Callbacks can also be disabled/enabled globally:
+
+```ruby
+Esse::ActiveRecord::Hoods.disable!
+Esse::ActiveRecord::Hoods.enable!
+Esse::ActiveRecord::Hoods.without_indexing do
+  10.times { User.create! }
+end
+```
+
+or by some specific list of index or index's repository
+
+```ruby
+Esse::ActiveRecord::Hoods.disable!(UsersIndex.repo)
+Esse::ActiveRecord::Hoods.enable!(UsersIndex.repo)
+Esse::ActiveRecord::Hoods.without_indexing(AccountsIndex UsersIndex.repo, ) do
+  10.times { User.create! }
+end
+```
+
+or by the model that the hook is configured
+
+```ruby
+User.without_indexing do
+  10.times { User.create! }
+end
+User.without_indexing(AccountsIndex) do
+  10.times { User.create! }
+end
+```
+
 
 ## Development
 
