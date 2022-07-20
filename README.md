@@ -92,12 +92,12 @@ end
 class User < ApplicationRecord
   belongs_to :organization
 
-  # Using a index repository as argument
-  index_callbacks AccountsIndex::User # Or UsersIndex.repo(:user) if repository is defined with `const: false'
-  # Using a index as argument. The default repository will be used. In case of multiple repositories, one exception will be raised.
-  index_callbacks UsersIndex 
+  # Using a index and repository as argument. Note that the index name is used instead of the 
+  # of the constant name. it's becase index and model depends on each other should result in
+  # circular dependencies issues.
+  index_callbacks 'users_index:user'
   # Using a block to direct a different object to be indexed
-  index_callbacks(OrganizationsIndex) { user.organization }
+  index_callbacks('organizations') { user.organization } # The `_index` suffix and repo name  is optional on the index name
 end
 ```
 

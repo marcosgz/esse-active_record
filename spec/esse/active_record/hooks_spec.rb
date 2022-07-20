@@ -47,6 +47,41 @@ RSpec.describe Esse::ActiveRecord::Hooks do
     allow(described_class).to receive(:all_repos).and_return(repositories)
   end
 
+  describe '.resolve_index_repository' do
+    specify do
+      expect(described_class.resolve_index_repository('users')).to eq(UsersIndex.repo(:user))
+    end
+
+    specify do
+      expect(described_class.resolve_index_repository('users_index')).to eq(UsersIndex.repo(:user))
+    end
+
+    specify do
+      expect(described_class.resolve_index_repository('users_index:user')).to eq(UsersIndex.repo(:user))
+    end
+
+    specify do
+      expect(described_class.resolve_index_repository('users:user')).to eq(UsersIndex.repo(:user))
+    end
+
+    specify do
+      expect(described_class.resolve_index_repository('UsersIndex')).to eq(UsersIndex.repo(:user))
+    end
+
+    specify do
+      expect(described_class.resolve_index_repository('UsersIndex::User')).to eq(UsersIndex.repo(:user))
+    end
+
+    specify do
+      stub_const('Foo::V1::UsersIndex', UsersIndex)
+      expect(described_class.resolve_index_repository('Foo::V1::UsersIndex')).to eq(Foo::V1::UsersIndex.repo(:user))
+      expect(described_class.resolve_index_repository('foo/v1/users')).to eq(Foo::V1::UsersIndex.repo(:user))
+      expect(described_class.resolve_index_repository('foo/v1/users_index')).to eq(Foo::V1::UsersIndex.repo(:user))
+      expect(described_class.resolve_index_repository('foo/v1/users_index/user')).to eq(Foo::V1::UsersIndex.repo(:user))
+      expect(described_class.resolve_index_repository('foo/v1/users:user')).to eq(Foo::V1::UsersIndex.repo(:user))
+    end
+  end
+
   describe '.disable!' do
     it 'disables the indexing of all repositories' do
       expect(described_class.enabled?).to be true

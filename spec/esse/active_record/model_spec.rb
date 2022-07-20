@@ -51,14 +51,14 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
 
         it 'register the model class into Esse::ActiveRecord::Hooks.models' do
           model_class = Class.new(DummyIndexableModel) do
-            index_callbacks DummiesIndex, on: [event]
+            index_callbacks 'dummies_index', on: [event]
           end
           expect(Esse::ActiveRecord::Hooks.models).to include(model_class)
         end
 
         it 'index the model on create' do
           model_class = Class.new(DummyIndexableModel) do
-            index_callbacks DummiesIndex, on: [event]
+            index_callbacks 'dummies_index', on: [event]
           end
           model = model_class.new
           expect(DummiesIndex.repo).to receive(:serialize).with(model).and_return(document)
@@ -69,7 +69,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
 
         it 'index the associated model using the block definition' do
           model_class = Class.new(DummyIndexableModel) do
-            index_callbacks DummiesIndex, on: [event] do
+            index_callbacks 'dummies_index', on: [event] do
               association
             end
 
@@ -88,7 +88,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
 
         it 'does not index when the hooks are globally disabled' do
           model_class = Class.new(DummyIndexableModel) do
-            index_callbacks DummiesIndex, on: [event]
+            index_callbacks 'dummies_index', on: [event]
           end
           model = model_class.new
 
@@ -101,7 +101,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
 
         it 'does not index when the hooks are disabled for the model' do
           model_class = Class.new(DummyIndexableModel) do
-            index_callbacks DummiesIndex, on: [event]
+            index_callbacks 'dummies_index', on: [event]
           end
           model = model_class.new
           model_class.without_indexing do
@@ -117,8 +117,8 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
           end
 
           model_class = Class.new(DummyIndexableModel) do
-            index_callbacks DummiesIndex::Dummy, on: [event]
-            index_callbacks OthersIndex::Other, on: [event]
+            index_callbacks 'dummies', on: [event]
+            index_callbacks 'others:other', on: [event]
           end
           model = model_class.new
           model_class.without_indexing(DummiesIndex) do
@@ -148,14 +148,14 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
 
       it 'register the model class into Esse::ActiveRecord::Hooks.models' do
         model_class = Class.new(DummyIndexableModel) do
-          index_callbacks DummiesIndex, on: %i[destroy]
+          index_callbacks 'dummies_index', on: %i[destroy]
         end
         expect(Esse::ActiveRecord::Hooks.models).to include(model_class)
       end
 
       it 'index the model on create' do
         model_class = Class.new(DummyIndexableModel) do
-          index_callbacks DummiesIndex, on: %i[destroy]
+          index_callbacks 'dummies_index', on: %i[destroy]
         end
         model = model_class.new
         expect(DummiesIndex.repo).to receive(:serialize).with(model).and_return(document)
@@ -166,7 +166,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
 
       it 'index the associated model using the block definition' do
         model_class = Class.new(DummyIndexableModel) do
-          index_callbacks DummiesIndex, on: %i[destroy] do
+          index_callbacks 'dummies_index', on: %i[destroy] do
             association
           end
 
@@ -185,7 +185,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
 
       it 'does not index when the hooks are globally disabled' do
         model_class = Class.new(DummyIndexableModel) do
-          index_callbacks DummiesIndex, on: %i[destroy]
+          index_callbacks 'dummies_index', on: %i[destroy]
         end
         model = model_class.new
 
@@ -198,7 +198,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
 
       it 'does not index when the hooks are disabled for the model' do
         model_class = Class.new(DummyIndexableModel) do
-          index_callbacks DummiesIndex, on: %i[destroy]
+          index_callbacks 'dummies_index', on: %i[destroy]
         end
         model = model_class.new
         model_class.without_indexing do
@@ -214,8 +214,8 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
         end
 
         model_class = Class.new(DummyIndexableModel) do
-          index_callbacks DummiesIndex::Dummy, on: %i[destroy]
-          index_callbacks OthersIndex::Other, on: %i[destroy]
+          index_callbacks 'dummies:dummy', on: %i[destroy]
+          index_callbacks 'others:other', on: %i[destroy]
         end
         model = model_class.new
         model_class.without_indexing(DummiesIndex) do

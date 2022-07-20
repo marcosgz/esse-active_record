@@ -15,31 +15,35 @@ module Esse
 
         # Define callback for create/update/delete elasticsearch index document after model commit.
         #
+        # @param [String] index_repo_name The path of index and repository name.
+        #   For example a index with a single repository named `users` is `users`. And a index with
+        #   multiple repositories named `animals` and `dog` as the repository name is `animals/dog`.
+        #   For namespace, use `/` as the separator.
         # @raise [ArgumentError] when the repo and events are already registered
         # @raise [ArgumentError] when the specified index have multiple repos
-        def index_callbacks(index_or_repo, on: %i[create update destroy], **options, &block)
+        def index_callbacks(index_repo_name, on: %i[create update destroy], **options, &block)
           @esse_index_repos ||= {}
-          repo = index_or_repo <= ::Esse::Repository ? index_or_repo : index_or_repo.repo
 
           operation_name = :index
-          if esse_index_repos.dig(repo, operation_name)
-            raise ArgumentError, "index repository #{repo} already registered #{operation_name} operation"
+          if esse_index_repos.dig(index_repo_name, operation_name)
+            raise ArgumentError, format('index repository %<name>p already registered %<op>s operation', name: index_repo_name, op: operation_name)
           end
 
-          esse_index_repos[repo] ||= {}
-          esse_index_repos[repo][operation_name] = {
+          esse_index_repos[index_repo_name] ||= {}
+          esse_index_repos[index_repo_name][operation_name] = {
             record: (block || -> { self }),
             options: options,
           }
 
           Esse::ActiveRecord::Hooks.register_model(self)
 
-          if_enabled = -> { Esse::ActiveRecord::Hooks.enabled?(repo) && Esse::ActiveRecord::Hooks.enabled_for_model?(self.class, repo) }
+          if_enabled = -> { Esse::ActiveRecord::Hooks.enabled?(index_repo_name) && Esse::ActiveRecord::Hooks.enabled_for_model?(self.class, index_repo_name) }
           (on & %i[create update]).each do |event|
             after_commit(on: event, if: if_enabled) do
-              opts = self.class.esse_index_repos.fetch(repo).fetch(operation_name)
+              opts = self.class.esse_index_repos.fetch(index_repo_name).fetch(operation_name)
               record = opts.fetch(:record)
               record = instance_exec(&record) if record.respond_to?(:call)
+              repo = Esse::ActiveRecord::Hooks.resolve_index_repository(index_repo_name)
               document = repo.serialize(record)
               repo.elasticsearch.index_document(document, **opts[:options]) if document
               true
@@ -47,9 +51,10 @@ module Esse
           end
           (on & %i[destroy]).each do |event|
             after_commit(on: event, if: if_enabled) do
-              opts = self.class.esse_index_repos.fetch(repo).fetch(operation_name)
+              opts = self.class.esse_index_repos.fetch(index_repo_name).fetch(operation_name)
               record = opts.fetch(:record)
               record = instance_exec(&record) if record.respond_to?(:call)
+              repo = Esse::ActiveRecord::Hooks.resolve_index_repository(index_repo_name)
               document = repo.serialize(record)
               repo.elasticsearch.delete_document(document, **opts[:options]) if document
               true

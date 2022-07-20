@@ -20,7 +20,7 @@ module Esse
         end
 
         # Global enable indexing callbacks. If no repository is specified, all repositories will be enabled.
-        # @param repos [Array<Esse::Index, Esse::Repo>]
+        # @param repos [Array<String, Esse::Index, Esse::Repo>]
         # @return [void]
         def enable!(*repos)
           filter_repositories(*repos).each do |repo|
@@ -29,7 +29,7 @@ module Esse
         end
 
         # Global disable indexing callbacks. If no repository is specified, all repositories will be disabled.
-        # @param repos [Array<Esse::Index, Esse::Repo>]
+        # @param repos [Array<String, Esse::Index, Esse::Repo>]
         # @return [void]
         def disable!(*repos)
           filter_repositories(*repos).each do |repo|
@@ -39,7 +39,7 @@ module Esse
 
         # Check if the given repository is enabled for indexing. If no repository is specified, all repositories will be checked.
         #
-        # @param repos [Array<Esse::Index, Esse::Repo>]
+        # @param repos [Array<String, Esse::Index, Esse::Repo>]
         # @return [Boolean]
         def disabled?(*repos)
           filter_repositories(*repos).all? { |repo| !state[:repos][repo] }
@@ -47,7 +47,7 @@ module Esse
 
         # Check if the given repository is enabled for indexing. If no repository is specified, all repositories will be checked.
         #
-        # @param repos [Array<Esse::Index, Esse::Repo>]
+        # @param repos [Array<String, Esse::Index, Esse::Repo>]
         # @return [Boolean]
         def enabled?(*repos)
           filter_repositories(*repos).all? { |repo| state[:repos][repo] }
@@ -56,7 +56,7 @@ module Esse
         # Enable model indexing callbacks for the given model. If no repository is specified, all repositories will be enabled.
         #
         # @param model_class [Class]
-        # @param repos [Array<Esse::Index, Esse::Repo>]
+        # @param repos [Array<String, Esse::Index, Esse::Repo>]
         # @raise [ArgumentError] if model repository is not registered for the given model
         # @return [void]
         def enable_model!(model_class, *repos)
@@ -69,7 +69,7 @@ module Esse
         # Disable model indexing callbacks for the given model. If no repository is specified, all repositories will be disabled.
         #
         # @param model_class [Class]
-        # @param repos [Array<Esse::Index, Esse::Repo>]
+        # @param repos [Array<String, Esse::Index, Esse::Repo>]
         # @raise [ArgumentError] if model repository is not registered for the given model
         # @return [void]
         def disable_model!(model_class, *repos)
@@ -88,7 +88,7 @@ module Esse
         # Check if the given model is enabled for indexing. If no repository is specified, all repositories will be checked.
         #
         # @param model_class [Class]
-        # @param repos [Array<Esse::Index, Esse::Repo>]
+        # @param repos [Array<String, Esse::Index, Esse::Repo>]
         # @return [Boolean]
         def enabled_for_model?(model_class, *repos)
           return false unless registered_model_class?(model_class)
@@ -127,6 +127,17 @@ module Esse
           end
         end
 
+        def resolve_index_repository(name)
+          index_name, repo_name = name.to_s.underscore.split('::').join('/').split(':', 2)
+          if index_name !~ /(I|_i)ndex$/ && index_name !~ /_index\/([\w_]+)$/
+            index_name = format('%<index_name>s_index', index_name: index_name)
+          end
+          klass = index_name.classify.constantize
+          return klass if klass <= Esse::Repository
+
+          repo_name.present? ? klass.repo(repo_name) : klass.repo
+        end
+
         private
 
         def all_repos
@@ -136,7 +147,7 @@ module Esse
         # Returns a list of all repositories for the given model
         # @return [Array<Symbol>]
         def model_repos(model_class)
-          model_class.esse_index_repos.keys
+          expand_index_repos(*model_class.esse_index_repos.keys)
         end
 
         # Returns a list of all repositories for the given model
@@ -157,8 +168,15 @@ module Esse
         end
 
         def expand_index_repos(*repos)
-          repos.flat_map do |klass|
-            klass <= Esse::Index ? klass.repo_hash.values : klass
+          repos.flat_map do |repo_name|
+            case repo_name
+            when Class
+              repo_name <= Esse::Index ? repo_name.repo_hash.values : repo_name
+            when String, Symbol
+              resolve_index_repository(repo_name)
+            else
+              raise ArgumentError, "Invalid index or repository name: #{repo_name.inspect}"
+            end
           end
         end
 
