@@ -20,7 +20,7 @@ Or install it yourself as:
 
 ## Usage
 
-Add the `:active_record` plugin and configure the `repository` or the `collection` with the ActiveRecord model you want to use.
+Add the `:active_record` plugin and configure the `collection` with the ActiveRecord model you want to use.
 
 ```ruby
 class UsersIndex < Esse::Index
