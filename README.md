@@ -76,7 +76,7 @@ end
 
 ### Indexing Callbacks
 
-The `esse_index` callback can be used to automaitcally index or delete documents after commit on create/update/destroy events.
+The `index_callbacks` callback can be used to automaitcally index or delete documents after commit on create/update/destroy events.
 
 ```ruby
 class UsersIndex < Esse::Index
@@ -93,11 +93,11 @@ class User < ApplicationRecord
   belongs_to :organization
 
   # Using a index repository as argument
-  esse_index AccountsIndex::User # Or UsersIndex.repo(:user) if repository is defined with `const: false'
+  index_callbacks AccountsIndex::User # Or UsersIndex.repo(:user) if repository is defined with `const: false'
   # Using a index as argument. The default repository will be used. In case of multiple repositories, one exception will be raised.
-  esse_index UsersIndex 
+  index_callbacks UsersIndex 
   # Using a block to direct a different object to be indexed
-  esse_index(OrganizationsIndex) { user.organization }
+  index_callbacks(OrganizationsIndex) { user.organization }
 end
 ```
 

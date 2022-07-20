@@ -17,7 +17,7 @@ module Esse
         #
         # @raise [ArgumentError] when the repo and events are already registered
         # @raise [ArgumentError] when the specified index have multiple repos
-        def esse_index(index_or_repo, on: %i[create update destroy], **options, &block)
+        def index_callbacks(index_or_repo, on: %i[create update destroy], **options, &block)
           @esse_index_repos ||= {}
           repo = index_or_repo <= ::Esse::Repository ? index_or_repo : index_or_repo.repo
 
