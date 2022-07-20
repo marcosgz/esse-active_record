@@ -93,7 +93,7 @@ class User < ApplicationRecord
   belongs_to :organization
 
   # Using a index and repository as argument. Note that the index name is used instead of the 
-  # of the constant name. it's becase index and model depends on each other should result in
+  # of the constant name. it's so because index and model depends on each other should result in
   # circular dependencies issues.
   index_callbacks 'users_index:user'
   # Using a block to direct a different object to be indexed
@@ -121,7 +121,7 @@ Esse::ActiveRecord::Hoods.without_indexing(AccountsIndex UsersIndex.repo, ) do
 end
 ```
 
-or by the model that the hook is configured
+or by the model that the callback is configured
 
 ```ruby
 User.without_indexing do
