@@ -69,9 +69,35 @@ end
 
 # Import data using the scopes
 #   > UsersIndex.elasticsearch.import(context: { active: true, role: 'admin' })
-# 
+#
 # Streaming data using the scopes
 #   > UsersIndex.documents(active: true, role: 'admin').first
+```
+
+### Data Streaming Options
+
+As default the active record support 3 streaming options:
+* `batch_size`: the number of documents to be streamed in each batch. Default is 1000;
+* `start`: the primary key value to start from, inclusive of the value;
+* `finish`: the primary key value to end at, inclusive of the value;
+
+This is useful when you want to import simultaneous data. You can make one process import all records between 1 and 10,000, and another from 10,000 and beyond
+
+```ruby
+UsersIndex.elasticsearch.import(context: { start: 1, finish: 10000, batch_size: 500 })
+```
+
+The default valueof `batch_size` can be also defined in the `collection` configuration:
+
+```ruby
+class UsersIndex < Esse::Index
+  plugin :active_record
+
+  repository :user do
+    collection ::User, batch_size: 500
+    serializer # ...
+  end
+end
 ```
 
 ### Indexing Callbacks
@@ -92,7 +118,7 @@ end
 class User < ApplicationRecord
   belongs_to :organization
 
-  # Using a index and repository as argument. Note that the index name is used instead of the 
+  # Using a index and repository as argument. Note that the index name is used instead of the
   # of the constant name. it's so because index and model depends on each other should result in
   # circular dependencies issues.
   index_callbacks 'users_index:user'
