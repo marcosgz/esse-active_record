@@ -41,32 +41,49 @@ RSpec.describe Esse::ActiveRecord::Collection do
       expect { |b| collection.new.each(&b) }.not_to yield_control
     end
 
-    context 'with filter parameters' do
-      let(:dog_class) do
-        Class.new(Animal) do
-          def ==(other)
-            other.id == id
-          end
-
-          def self.name
-            'Dog'
-          end
-        end
-      end
-
+    context 'with start and batch_size' do
       let(:collection_class) do
         klass = Class.new(described_class)
         klass.base_scope = -> { Dog }
         klass
       end
 
-      before do
-        Object.const_set(:Dog, dog_class)
+      let!(:dogs) do
+        Array.new(3) { |i| Dog.create!(name: "Dog #{i.next}") }
       end
 
       after do
         Dog.destroy_all
-        Object.send(:remove_const, :Dog)
+      end
+
+      it 'stream data in batches according to the :batch_size option' do
+        instance = collection_class.new(batch_size: 1)
+
+        expect { |b| instance.each(&b) }.to yield_successive_args([dogs[0..0], {}], [dogs[1..1], {}], [dogs[2..2], {}])
+      end
+
+      it 'stream data in batches according to the :batch_size option and :start option' do
+        instance = collection_class.new(batch_size: 1, start: dogs[1].id)
+
+        expect { |b| instance.each(&b) }.to yield_successive_args([dogs[1..1], {}], [dogs[2..2], {}])
+      end
+
+      it 'stream data in batches according to the :batch_size option and :finish option' do
+        instance = collection_class.new(batch_size: 1, finish: dogs[1].id)
+
+        expect { |b| instance.each(&b) }.to yield_successive_args([dogs[0..0], {}], [dogs[1..1], {}])
+      end
+    end
+
+    context 'with filter parameters' do
+      let(:collection_class) do
+        klass = Class.new(described_class)
+        klass.base_scope = -> { Dog }
+        klass
+      end
+
+      after do
+        Dog.destroy_all
       end
 
       it 'filteres by existing attributes' do

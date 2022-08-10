@@ -55,31 +55,14 @@ RSpec.describe Esse::ActiveRecord::Collection, '.scope' do
   end
 
   describe '#each using scopes' do
-    let(:dog_class) do
-      Class.new(Animal) do
-        def ==(other)
-          other.id == id
-        end
-
-        def self.name
-          'Dog'
-        end
-      end
-    end
-
     let(:collection_class) do
       klass = Class.new(described_class)
       klass.base_scope = -> { Dog }
       klass
     end
 
-    before do
-      Object.const_set(:Dog, dog_class)
-    end
-
     after do
       Dog.destroy_all
-      Object.send(:remove_const, :Dog)
     end
 
     context 'when filtering by a non-existent scope' do

@@ -45,20 +45,30 @@ module Esse
         end
       end
 
-      def initialize(**params)
+      attr_reader :start, :finish, :batch_size, :params
+
+      # @param [Integer] start Specifies the primary key value to start from, inclusive of the value.
+      # @param [Integer] finish  Specifies the primary key value to end at, inclusive of the value.
+      # @param [Integer] batch_size The number of records to be returned in each batch. Defaults to 1000.
+      # @param [Hash] params The query criteria
+      # @return [Esse::ActiveRecord::Collection]
+      def initialize(start: nil, finish: nil, batch_size: nil, **params)
+        @start = start
+        @finish = finish
+        @batch_size = batch_size || self.class.batch_size || 1000
         @params = params
       end
 
       def each
-        dataset.find_in_batches(batch_size: batch_size) do |rows|
-          yield(rows, **@params)
+        dataset.find_in_batches(**batch_options) do |rows|
+          yield(rows, **params)
         end
       end
 
       def dataset(**kwargs)
         query = self.class.base_scope&.call || raise(NotImplementedError, "No scope defined for #{self.class}")
         query = query.except(:order, :limit, :offset)
-        @params.merge(kwargs).each do |key, value|
+        params.merge(kwargs).each do |key, value|
           if self.class.scopes.key?(key)
             scope_proc = self.class.scopes[key]
             query = if scope_proc.arity == 0
@@ -88,8 +98,13 @@ module Esse
 
       protected
 
-      def batch_size
-        self.class.batch_size || 1000
+      def batch_options
+        {
+          batch_size: batch_size
+        }.tap do |hash|
+          hash[:start] = start if start
+          hash[:finish] = finish if finish
+        end
       end
     end
   end

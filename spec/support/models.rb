@@ -26,7 +26,12 @@ ActiveRecord::Schema.define do
 end
 
 class Animal < ActiveRecord::Base
-  has_many :animals
+end
+
+class Dog < Animal
+end
+
+class Cat < Animal
 end
 
 class State < ActiveRecord::Base
