@@ -43,6 +43,18 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do
         expect(AnimalsIndex.repo.dataset).to be_a(::ActiveRecord::Relation)
       end
 
+      it 'define a collection with custom batch_size' do
+        expect {
+          stub_index(:animals) do
+            plugin :active_record
+
+            collection(Animal, batch_size: 10)
+          end
+        }.not_to raise_error
+        expect(col = AnimalsIndex.repo.instance_variable_get(:@collection_proc)).to be < Esse::ActiveRecord::Collection
+        expect(col.batch_size).to eq(10)
+      end
+
       it 'evaluates the block in the Esse::ActiveRecord::Collection' do
         expect {
           stub_index(:animals) do
