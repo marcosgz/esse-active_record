@@ -90,7 +90,7 @@ class OrdersIndex < Esse::Index
         ExternalSystem::Customer.find_all_by_ids(orders.map(&:customer_id)).index_by(&:id) # => { 1 => <Customer>, 2 => <Customer> }
       end
     end
-    serializer do |order, customers: [], **_|
+    serializer do |order, customers: {}, **_|
       customer = customers[order.customer_id]
       {
         id: order.id,
@@ -126,7 +126,7 @@ class OrdersIndex < Esse::Index
 end
 ```
 
-### Data Streaming Optionsou
+### Data Streaming Options
 
 As default the active record support 3 streaming options:
 * `batch_size`: the number of documents to be streamed in each batch. Default is 1000;
