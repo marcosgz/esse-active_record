@@ -16,6 +16,11 @@ module Esse
       class_attribute :scopes
       self.scopes = {}
 
+      # The hash with the contexts as key and the transformer proc as value
+      # @return [Hash]
+      class_attribute :batch_contexts
+      self.batch_contexts = {}
+
       class << self
         def inspect
           return super unless self < Esse::ActiveRecord::Collection
@@ -34,6 +39,7 @@ module Esse
           super
 
           subclass.scopes = scopes.dup
+          subclass.batch_contexts = batch_contexts.dup
         end
 
         def scope(name, proc = nil, override: false, &block)
@@ -42,6 +48,14 @@ module Esse
           raise ArgumentError, "scope `#{name}' already defined" if !override && scopes.key?(name.to_sym)
 
           scopes[name.to_sym] = proc
+        end
+
+        def batch_context(name, proc = nil, override: false, &block)
+          proc = proc&.to_proc || block
+          raise ArgumentError, 'proc or block required' unless proc
+          raise ArgumentError, "batch_context `#{name}' already defined" if !override && batch_contexts.key?(name.to_sym)
+
+          batch_contexts[name.to_sym] = proc
         end
       end
 
@@ -61,7 +75,11 @@ module Esse
 
       def each
         dataset.find_in_batches(**batch_options) do |rows|
-          yield(rows, **params)
+          kwargs = params.dup
+          self.class.batch_contexts.each do |name, proc|
+            kwargs[name] = proc.call(rows, **params)
+          end
+          yield(rows, **kwargs)
         end
       end
 
