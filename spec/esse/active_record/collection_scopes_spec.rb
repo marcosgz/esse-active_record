@@ -69,7 +69,7 @@ RSpec.describe Esse::ActiveRecord::Collection, '.scope' do
       it 'raises an error' do
         instance = collection_class.new(some_missing_scope: 'test')
         expect {
-          instance.each { |row| }
+          instance.each { |rows| }
         }.to raise_error(ArgumentError, "Unknown scope `some_missing_scope'")
       end
 

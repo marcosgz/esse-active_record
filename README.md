@@ -51,7 +51,7 @@ class UsersIndex < Esse::Index
 end
 ```
 
-### Repository Scope
+### Collection Scope
 It's also possible to specify custom scopes to the repository collection to be used to import data to the index:
 
 ```ruby
@@ -74,7 +74,59 @@ end
 #   > UsersIndex.documents(active: true, role: 'admin').first
 ```
 
-### Data Streaming Options
+## Collection Batch Context
+
+Assume that you have a collection of orders and you want to also include the customer data that lives in a external system. To avoid making a request for each order, you can use the `batch_context` to fetch the data in batches and make it available in the serializer context.
+
+```ruby
+class OrdersIndex < Esse::Index
+  plugin :active_record
+
+  repository :order do
+    collection ::Order do
+      batch_context :customers do |orders, **_existing_context|
+        # The return value will be available in the serializer context
+        # { customers: <value returned from this block> }
+        ExternalSystem::Customer.find_all_by_ids(orders.map(&:customer_id)).index_by(&:id) # => { 1 => <Customer>, 2 => <Customer> }
+      end
+    end
+    serializer do |order, customers: [], **_|
+      customer = customers[order.customer_id]
+      {
+        id: order.id,
+        customer: {
+          id: customer&.id,
+          name: customer&.name
+        }
+      }
+    end
+  end
+end
+```
+
+For active record associations, you can define the repository collection by eager loading the associations as usual:
+
+```ruby
+
+class OrdersIndex < Esse::Index
+  plugin :active_record
+
+  repository :order do
+    collection ::Order.includes(:customer)
+    serializer do |order, **_|
+      {
+        id: order.id,
+        customer: {
+          id: order.customer&.id,
+          name: order.customer&.name
+        }
+      }
+    end
+  end
+end
+```
+
+### Data Streaming Optionsou
 
 As default the active record support 3 streaming options:
 * `batch_size`: the number of documents to be streamed in each batch. Default is 1000;
