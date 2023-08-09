@@ -182,9 +182,9 @@ end
 Callbacks can also be disabled/enabled globally:
 
 ```ruby
-Esse::ActiveRecord::Hoods.disable!
-Esse::ActiveRecord::Hoods.enable!
-Esse::ActiveRecord::Hoods.without_indexing do
+Esse::ActiveRecord::Hooks.disable!
+Esse::ActiveRecord::Hooks.enable!
+Esse::ActiveRecord::Hooks.without_indexing do
   10.times { User.create! }
 end
 ```
@@ -192,9 +192,9 @@ end
 or by some specific list of index or index's repository
 
 ```ruby
-Esse::ActiveRecord::Hoods.disable!(UsersIndex.repo)
-Esse::ActiveRecord::Hoods.enable!(UsersIndex.repo)
-Esse::ActiveRecord::Hoods.without_indexing(AccountsIndex UsersIndex.repo, ) do
+Esse::ActiveRecord::Hooks.disable!(UsersIndex.repo)
+Esse::ActiveRecord::Hooks.enable!(UsersIndex.repo)
+Esse::ActiveRecord::Hooks.without_indexing(AccountsIndex UsersIndex.repo, ) do
   10.times { User.create! }
 end
 ```
