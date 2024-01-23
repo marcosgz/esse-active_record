@@ -34,12 +34,12 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
   end
 
   after do
-    Esse::ActiveRecord::Hooks.instance_variable_set(:@models, @models_value_backup)
+    Esse::ActiveRecord::Hooks.instance_variable_set(:@models, @models_value_backup) # rubocop:disable RSpec/InstanceVariable
   end
 
   describe '.index_callbacks' do
     shared_examples 'index document callbacks' do |event|
-      context "on #{event}" do
+      context "when on #{event}" do
         let(:document) { double }
 
         before do
@@ -136,7 +136,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
     include_examples 'index document callbacks', :create
     include_examples 'index document callbacks', :update
 
-    context 'on destroy' do
+    context 'when on destroy' do
       let(:document) { double }
 
       before do

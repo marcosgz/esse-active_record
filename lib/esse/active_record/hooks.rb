@@ -141,7 +141,7 @@ module Esse
         private
 
         def all_repos
-          models.flat_map(&method(:model_repos)).uniq
+          models.flat_map { |model_class| model_repos(model_class) }.uniq
         end
 
         # Returns a list of all repositories for the given model
@@ -171,7 +171,7 @@ module Esse
           repos.flat_map do |repo_name|
             case repo_name
             when Class
-              repo_name <= Esse::Index ? repo_name.repo_hash.values : repo_name
+              (repo_name <= Esse::Index) ? repo_name.repo_hash.values : repo_name
             when String, Symbol
               resolve_index_repository(repo_name)
             else

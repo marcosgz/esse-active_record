@@ -43,7 +43,7 @@ RSpec.describe Esse::ActiveRecord::Hooks do
       end
     end
 
-    Esse::ActiveRecord::Hooks.send(:global_store)[Esse::ActiveRecord::Hooks::STORE_STATE_KEY] = nil
+    described_class.send(:global_store)[Esse::ActiveRecord::Hooks::STORE_STATE_KEY] = nil
     allow(described_class).to receive(:all_repos).and_return(repositories)
   end
 

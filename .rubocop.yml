@@ -25,6 +25,12 @@ RSpec/MultipleExpectations:
 RSpec/ExampleLength:
   Enabled: false
 
+RSpec/MessageSpies:
+  Enabled: false
+
+RSpec/StubbedMock:
+  Enabled: false
+
 Layout/SpaceInsideHashLiteralBraces:
   Enabled: false
 
