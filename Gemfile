@@ -2,7 +2,7 @@
 
 source 'https://rubygems.org'
 
-gem 'esse', github: 'marcosgz/esse', branch: 'master'
+gem 'esse', '~> 0.2.4'
 gem 'sqlite3', '~> 1.3.6'
 gem 'activerecord', '~> 5.2'
 

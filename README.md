@@ -68,7 +68,7 @@ class UsersIndex < Esse::Index
 end
 
 # Import data using the scopes
-#   > UsersIndex.elasticsearch.import(context: { active: true, role: 'admin' })
+#   > UsersIndex.import(context: { active: true, role: 'admin' })
 #
 # Streaming data using the scopes
 #   > UsersIndex.documents(active: true, role: 'admin').first
