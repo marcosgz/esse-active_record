@@ -10,7 +10,9 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do # rubocop:disable R
           stub_index(:animals) do
             plugin :active_record
 
-            collection Animal
+            repository :animal do
+              collection Animal
+            end
           end
         }.not_to raise_error
         expect(AnimalsIndex.repo.instance_variable_get(:@collection_proc)).to be < Esse::ActiveRecord::Collection
@@ -36,7 +38,9 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do # rubocop:disable R
           stub_index(:animals) do
             plugin :active_record
 
-            collection Animal.all
+            repository :animal do
+              collection Animal.all
+            end
           end
         }.not_to raise_error
         expect(AnimalsIndex.repo.instance_variable_get(:@collection_proc)).to be < Esse::ActiveRecord::Collection
@@ -48,7 +52,9 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do # rubocop:disable R
           stub_index(:animals) do
             plugin :active_record
 
-            collection(Animal, batch_size: 10)
+            repository :animal do
+              collection(Animal, batch_size: 10)
+            end
           end
         }.not_to raise_error
         expect(col = AnimalsIndex.repo.instance_variable_get(:@collection_proc)).to be < Esse::ActiveRecord::Collection
@@ -60,9 +66,11 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do # rubocop:disable R
           stub_index(:animals) do
             plugin :active_record
 
-            collection Animal do
-              def self.foo
-                'bar'
+            repository :animal do
+              collection Animal do
+                def self.foo
+                  'bar'
+                end
               end
             end
           end
