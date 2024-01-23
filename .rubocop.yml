@@ -17,6 +17,13 @@ AllCops:
     - "db/**/*"
     - "tmp/**/*"
     - "vendor/**/*"
+  NewCops: enable
+
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Enabled: false
 
 Layout/SpaceInsideHashLiteralBraces:
   Enabled: false
