@@ -27,7 +27,7 @@ RSpec.describe Esse::ActiveRecord::Hooks do
   let(:repositories) { AnimalsIndex.repo_hash.values + UsersIndex.repo_hash.values }
 
   before do
-    stub_index(:animals) do
+    stub_esse_index(:animals) do
       plugin :active_record
 
       repository :cat, const: true do
@@ -36,7 +36,7 @@ RSpec.describe Esse::ActiveRecord::Hooks do
       end
     end
 
-    stub_index(:users) do
+    stub_esse_index(:users) do
       plugin :active_record
 
       repository :user, const: true do

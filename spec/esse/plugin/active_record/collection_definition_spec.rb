@@ -7,7 +7,7 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do # rubocop:disable R
     context 'when the type is a model class' do
       it 'define collection with only class name without raise an error' do
         expect {
-          stub_index(:animals) do
+          stub_esse_index(:animals) do
             plugin :active_record
 
             repository :animal do
@@ -21,7 +21,7 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do # rubocop:disable R
 
       it 'define collection with name and class name without raise an error' do
         expect {
-          stub_index(:animals) do
+          stub_esse_index(:animals) do
             plugin :active_record
 
             repository :cat do
@@ -35,7 +35,7 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do # rubocop:disable R
 
       it 'define collection with an activerecord relation' do
         expect {
-          stub_index(:animals) do
+          stub_esse_index(:animals) do
             plugin :active_record
 
             repository :animal do
@@ -49,7 +49,7 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do # rubocop:disable R
 
       it 'define a collection with custom batch_size' do
         expect {
-          stub_index(:animals) do
+          stub_esse_index(:animals) do
             plugin :active_record
 
             repository :animal do
@@ -63,7 +63,7 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do # rubocop:disable R
 
       it 'evaluates the block in the Esse::ActiveRecord::Collection' do
         expect {
-          stub_index(:animals) do
+          stub_esse_index(:animals) do
             plugin :active_record
 
             repository :animal do

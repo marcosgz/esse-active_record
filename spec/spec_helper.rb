@@ -3,8 +3,8 @@
 require 'bundler/setup'
 require 'dotenv/load'
 require 'esse/active_record'
+require 'esse/rspec'
 
-require 'support/class_helpers'
 require 'support/config_helpers'
 require 'support/webmock'
 require 'support/models'
@@ -16,6 +16,5 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
-  config.include ClassHelpers
   config.include ConfigHelpers
 end

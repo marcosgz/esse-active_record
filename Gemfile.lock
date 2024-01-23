@@ -33,6 +33,9 @@ GEM
     esse (0.2.6)
       multi_json
       thor (>= 0.19)
+    esse-rspec (0.0.6)
+      esse (>= 0.2.4)
+      rspec (>= 3)
     hashdiff (1.1.0)
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
@@ -123,6 +126,7 @@ DEPENDENCIES
   dotenv
   esse (~> 0.2.4)
   esse-active_record!
+  esse-rspec (~> 0.0.6)
   pry
   rake
   rspec

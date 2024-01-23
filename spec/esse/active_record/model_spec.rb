@@ -43,7 +43,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
         let(:document) { double }
 
         before do
-          stub_index(:dummies) do
+          stub_esse_index(:dummies) do
             repository :dummy, const: true do
             end
           end
@@ -112,7 +112,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
         end
 
         it 'allows to select which indices will not execute indexing callbacks' do
-          stub_index(:others) do
+          stub_esse_index(:others) do
             repository(:other, const: true) {}
           end
 
@@ -140,7 +140,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
       let(:document) { double }
 
       before do
-        stub_index(:dummies) do
+        stub_esse_index(:dummies) do
           repository :dummy, const: true do
           end
         end
@@ -209,7 +209,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
       end
 
       it 'allows to select which indices will not execute indexing callbacks' do
-        stub_index(:others) do
+        stub_esse_index(:others) do
           repository(:other, const: true) {}
         end
 
