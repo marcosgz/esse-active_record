@@ -68,7 +68,7 @@ RSpec.describe Esse::ActiveRecord::Collection, '.batch_context' do
     it 'does not apply any context when it is not defined' do
       lake_county = County.create!(name: 'Lake')
       instance = collection_class.new
-      expect { |b| instance.each(&b) }.to yield_successive_args([[lake_county], {}])
+      expect { |b| instance.each(&b) }.to yield_successive_args([lake_county])
     end
 
     it 'only applies the params as context when no batch context is defined' do
