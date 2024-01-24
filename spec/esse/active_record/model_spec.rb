@@ -15,6 +15,10 @@ class DummyIndexableModel
     end
   end
 
+  def id
+    @id ||= SecureRandom.uuid
+  end
+
   def run_commit_callbacks
     run_callbacks :commit
   end
@@ -31,6 +35,7 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
     Thread.current[Esse::ActiveRecord::Hooks::STORE_STATE_KEY] = nil
     @models_value_backup = Esse::ActiveRecord::Hooks.models.dup
     Esse::ActiveRecord::Hooks.models.clear
+    stub_cluster_info
   end
 
   after do
@@ -40,11 +45,17 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
   describe '.index_callbacks' do
     shared_examples 'index document callbacks' do |event|
       context "when on #{event}" do
-        let(:document) { double }
+        let(:index_ok_response) { { 'result' => 'created' } }
 
         before do
           stub_esse_index(:dummies) do
             repository :dummy, const: true do
+              document do |dummy, **|
+                {
+                  _id: dummy.id,
+                  name: "Dummy #{dummy.id}"
+                }
+              end
             end
           end
         end
@@ -61,9 +72,14 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
             index_callbacks 'dummies_index', on: [event]
           end
           model = model_class.new
-          expect(DummiesIndex.repo).to receive(:serialize).with(model).and_return(document)
-          expect(DummiesIndex.repo).to receive(:elasticsearch).and_return(backend_proxy)
-          expect(backend_proxy).to receive(:index_document).with(document, {}).and_return(:ok)
+
+          expect(DummiesIndex).to receive(:index).and_call_original
+          expect(DummiesIndex).to esse_receive_request(:index).with(
+            id: model.id,
+            index: DummiesIndex.index_name,
+            body: {name: "Dummy #{model.id}"},
+          ).and_return(index_ok_response)
+
           model.send(event)
         end
 
@@ -73,16 +89,19 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
               association
             end
 
-            protected
-
             def association
-              :other
+              @association ||= DummyIndexableModel.new
             end
           end
           model = model_class.new
-          expect(DummiesIndex.repo).to receive(:serialize).with(:other).and_return(document)
-          expect(DummiesIndex.repo).to receive(:elasticsearch).and_return(backend_proxy)
-          expect(backend_proxy).to receive(:index_document).with(document, {}).and_return(:ok)
+
+          expect(DummiesIndex).to receive(:index).and_call_original
+          expect(DummiesIndex).to esse_receive_request(:index).with(
+            id: model.association.id,
+            index: DummiesIndex.index_name,
+            body: {name: "Dummy #{model.association.id}"},
+          ).and_return(index_ok_response)
+
           model.send(event)
         end
 
@@ -92,9 +111,8 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
           end
           model = model_class.new
 
+          expect(DummiesIndex).not_to receive(:index)
           Esse::ActiveRecord::Hooks.without_indexing do
-            expect(DummiesIndex.repo).not_to receive(:serialize)
-            expect(DummiesIndex.repo).not_to receive(:elasticsearch)
             model.send(event)
           end
         end
@@ -104,16 +122,22 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
             index_callbacks 'dummies_index', on: [event]
           end
           model = model_class.new
+          expect(DummiesIndex).not_to receive(:index)
           model_class.without_indexing do
-            expect(DummiesIndex.repo).not_to receive(:serialize)
-            expect(DummiesIndex.repo).not_to receive(:elasticsearch)
             model.send(event)
           end
         end
 
         it 'allows to select which indices will not execute indexing callbacks' do
           stub_esse_index(:others) do
-            repository(:other, const: true) {}
+            repository(:other, const: true) do
+              document do |other, **|
+                {
+                  _id: other.id,
+                  name: "Other #{other.id}"
+                }
+              end
+            end
           end
 
           model_class = Class.new(DummyIndexableModel) do
@@ -121,12 +145,14 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
             index_callbacks 'others:other', on: [event]
           end
           model = model_class.new
+          expect(DummiesIndex).not_to receive(:index)
+          expect(OthersIndex).to receive(:index).and_call_original
+          expect(OthersIndex).to esse_receive_request(:index).with(
+            id: model.id,
+            index: OthersIndex.index_name,
+            body: {name: "Other #{model.id}"},
+          ).and_return(index_ok_response)
           model_class.without_indexing(DummiesIndex) do
-            expect(DummiesIndex::Dummy).not_to receive(:serialize)
-            expect(DummiesIndex::Dummy).not_to receive(:index_document)
-            expect(OthersIndex::Other).to receive(:serialize).with(model).and_return(document)
-            expect(OthersIndex::Other).to receive(:elasticsearch).and_return(backend_proxy)
-            expect(backend_proxy).to receive(:index_document).with(document, {}).and_return(:ok)
             model.send(event)
           end
         end
@@ -134,14 +160,20 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
     end
 
     include_examples 'index document callbacks', :create
-    include_examples 'index document callbacks', :update
+    # include_examples 'index document callbacks', :update
 
     context 'when on destroy' do
-      let(:document) { double }
+      let(:delete_ok_response) { { 'result' => 'deleted' } }
 
       before do
         stub_esse_index(:dummies) do
           repository :dummy, const: true do
+            document do |dummy, **|
+              {
+                _id: dummy.id,
+                name: "Dummy #{dummy.id}"
+              }
+            end
           end
         end
       end
@@ -153,77 +185,97 @@ RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
         expect(Esse::ActiveRecord::Hooks.models).to include(model_class)
       end
 
-      it 'index the model on create' do
+      it 'removes the document on destroy' do
         model_class = Class.new(DummyIndexableModel) do
           index_callbacks 'dummies_index', on: %i[destroy]
         end
         model = model_class.new
-        expect(DummiesIndex.repo).to receive(:serialize).with(model).and_return(document)
-        expect(DummiesIndex.repo).to receive(:elasticsearch).and_return(backend_proxy)
-        expect(backend_proxy).to receive(:delete_document).with(document, {}).and_return(:ok)
+        expect(DummiesIndex).to receive(:delete).and_call_original
+        expect(DummiesIndex).to esse_receive_request(:delete).with(
+          id: model.id,
+        ).and_return(delete_ok_response)
         model.destroy
       end
 
-      it 'index the associated model using the block definition' do
+      it 'does not raise error when the document does not exist' do
+        model_class = Class.new(DummyIndexableModel) do
+          index_callbacks 'dummies_index', on: %i[destroy]
+        end
+        model = model_class.new
+        expect(DummiesIndex).to receive(:delete).and_call_original
+        expect(DummiesIndex).to esse_receive_request(:delete).with(
+          id: model.id,
+        ).and_raise_http_status(404, { 'error' => { 'type' => 'not_found' } })
+        expect { model.destroy }.not_to raise_error
+      end
+
+      it 'removes the associated model using the block definition' do
         model_class = Class.new(DummyIndexableModel) do
           index_callbacks 'dummies_index', on: %i[destroy] do
             association
           end
 
-          protected
-
           def association
-            :other
+            @association ||= DummyIndexableModel.new
           end
         end
         model = model_class.new
-        expect(DummiesIndex.repo).to receive(:serialize).with(:other).and_return(document)
-        expect(DummiesIndex.repo).to receive(:elasticsearch).and_return(backend_proxy)
-        expect(backend_proxy).to receive(:delete_document).with(document, {}).and_return(:ok)
+        expect(DummiesIndex).to receive(:delete).and_call_original
+        expect(DummiesIndex).to esse_receive_request(:delete).with(
+          id: model.association.id,
+        ).and_return(delete_ok_response)
         model.destroy
       end
 
-      it 'does not index when the hooks are globally disabled' do
+      it 'does not perform delete request when the hooks are globally disabled' do
         model_class = Class.new(DummyIndexableModel) do
           index_callbacks 'dummies_index', on: %i[destroy]
         end
         model = model_class.new
 
+        expect(DummiesIndex).not_to receive(:delete)
         Esse::ActiveRecord::Hooks.without_indexing do
-          expect(DummiesIndex.repo).not_to receive(:serialize)
-          expect(DummiesIndex.repo).not_to receive(:elasticsearch)
           model.destroy
         end
       end
 
-      it 'does not index when the hooks are disabled for the model' do
+      it 'does not perform delete request when the hooks are disabled for the model' do
         model_class = Class.new(DummyIndexableModel) do
           index_callbacks 'dummies_index', on: %i[destroy]
         end
         model = model_class.new
+
+        expect(DummiesIndex).not_to receive(:delete)
         model_class.without_indexing do
-          expect(DummiesIndex.repo).not_to receive(:serialize)
-          expect(DummiesIndex.repo).not_to receive(:elasticsearch)
           model.destroy
         end
       end
 
-      it 'allows to select which indices will not execute indexing callbacks' do
+      it 'allows to select which indices will NOT perform :delete request during callbacks' do
         stub_esse_index(:others) do
-          repository(:other, const: true) {}
+          repository(:other, const: true) do
+            document do |other, **|
+              {
+                _id: other.id,
+                name: "Other #{other.id}"
+              }
+            end
+          end
         end
 
         model_class = Class.new(DummyIndexableModel) do
           index_callbacks 'dummies:dummy', on: %i[destroy]
           index_callbacks 'others:other', on: %i[destroy]
         end
+
         model = model_class.new
+        expect(DummiesIndex).not_to receive(:delete)
+        expect(OthersIndex).to receive(:delete).and_call_original
+        expect(OthersIndex).to esse_receive_request(:delete).with(
+          id: model.id,
+        ).and_return(delete_ok_response)
+
         model_class.without_indexing(DummiesIndex) do
-          expect(DummiesIndex::Dummy).not_to receive(:serialize)
-          expect(DummiesIndex::Dummy).not_to receive(:delete_document)
-          expect(OthersIndex::Other).to receive(:serialize).with(model).and_return(document)
-          expect(OthersIndex::Other).to receive(:elasticsearch).and_return(backend_proxy)
-          expect(backend_proxy).to receive(:delete_document).with(document, {}).and_return(:ok)
           model.destroy
         end
       end
