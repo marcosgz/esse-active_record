@@ -7,6 +7,19 @@ on:
   pull_request:
 
 jobs:
+  linter:
+    runs-on: ubuntu-latest
+    name: "Rubocop"
+    env:
+      BUNDLE_GEMFILE: ci/Gemfile.rails-6.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.0"
+          bundler-cache: true
+      - name: Run linter
+        run: bundle exec rubocop
   ruby-2:
     runs-on: ubuntu-latest
     strategy:
@@ -16,7 +29,7 @@ jobs:
           - "2.7"
         gemfile:
           - ci/Gemfile.rails-5.2
-    name: ${{ matrix.ruby }}-${{ matrix.gemfile }}
+    name: "ruby-${{ matrix.ruby }}/${{ matrix.gemfile }} specs"
     env:
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     steps:
@@ -25,8 +38,6 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - name: Run linter
-        run: bundle exec rubocop
       - name: Run tests
         run: bundle exec rspec
   ruby-3:
@@ -44,7 +55,7 @@ jobs:
           - ci/Gemfile.rails-6.1
           - ci/Gemfile.rails-7.0
           - ci/Gemfile.rails-7.1
-    name: ${{ matrix.ruby }}-${{ matrix.gemfile }}
+    name: "ruby-${{ matrix.ruby }}/${{ matrix.gemfile }} specs"
     env:
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     steps:
@@ -53,7 +64,5 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - name: Run linter
-        run: bundle exec rubocop
       - name: Run tests
         run: bundle exec rspec
