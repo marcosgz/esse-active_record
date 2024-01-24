@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
+RSpec.describe Esse::ActiveRecord::Model do
   let(:backend_proxy) { double }
 
   before do

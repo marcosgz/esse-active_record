@@ -31,7 +31,7 @@ module Esse
 
           esse_index_repos[index_repo_name] ||= {}
           esse_index_repos[index_repo_name][operation_name] = {
-            record: (block || -> { self }),
+            record: block || -> { self },
             options: options,
           }
 
