@@ -29,17 +29,17 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'esse'
+  spec.add_dependency 'esse', '>= 0.2.3'
   spec.add_dependency 'activerecord', '>= 4.2', '< 8'
   spec.add_development_dependency 'awesome_print'
   spec.add_development_dependency 'dotenv'
   spec.add_development_dependency 'pry'
-  spec.add_development_dependency 'rake', '~> 12.3'
-  spec.add_development_dependency 'rspec', '~> 3.0'
-  spec.add_development_dependency 'webmock', '~> 3.14'
-  spec.add_development_dependency 'yard', '~> 0.9.20'
-  spec.add_development_dependency 'standard', '~> 1.3'
-  spec.add_development_dependency 'rubocop', '~> 1.20'
-  spec.add_development_dependency 'rubocop-performance', '~> 1.11', '>= 1.11.5'
-  spec.add_development_dependency 'rubocop-rspec', '~> 2.4'
+  spec.add_development_dependency 'rake'
+  spec.add_development_dependency 'rspec'
+  spec.add_development_dependency 'webmock'
+  spec.add_development_dependency 'yard'
+  spec.add_development_dependency 'standard'
+  spec.add_development_dependency 'rubocop'
+  spec.add_development_dependency 'rubocop-performance'
+  spec.add_development_dependency 'rubocop-rspec'
 end

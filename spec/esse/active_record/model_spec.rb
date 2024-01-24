@@ -1,229 +1,336 @@
 require 'spec_helper'
 
-class DummyIndexableModel
-  extend ActiveModel::Callbacks
-  include Esse::ActiveRecord::Model
-
-  attr_reader :event
-
-  define_model_callbacks :commit, :rollback
-
-  %i[create update destroy].each do |event|
-    define_method(event) do |succeed: true|
-      @event = event
-      succeed ? run_commit_callbacks : run_rollback_callbacks
-    end
-  end
-
-  def run_commit_callbacks
-    run_callbacks :commit
-  end
-
-  def run_rollback_callbacks
-    run_callbacks :rollback
-  end
-end
-
-RSpec.describe Esse::ActiveRecord::Model, model_hooks: true do
+RSpec.describe Esse::ActiveRecord::Model do
   let(:backend_proxy) { double }
 
   before do
     Thread.current[Esse::ActiveRecord::Hooks::STORE_STATE_KEY] = nil
     @models_value_backup = Esse::ActiveRecord::Hooks.models.dup
     Esse::ActiveRecord::Hooks.models.clear
-  end
+    stub_cluster_info
 
-  after do
-    Esse::ActiveRecord::Hooks.instance_variable_set(:@models, @models_value_backup)
-  end
-
-  describe '.index_callbacks' do
-    shared_examples 'index document callbacks' do |event|
-      context "on #{event}" do
-        let(:document) { double }
-
-        before do
-          stub_index(:dummies) do
-            repository :dummy, const: true do
-            end
-          end
-        end
-
-        it 'register the model class into Esse::ActiveRecord::Hooks.models' do
-          model_class = Class.new(DummyIndexableModel) do
-            index_callbacks 'dummies_index', on: [event]
-          end
-          expect(Esse::ActiveRecord::Hooks.models).to include(model_class)
-        end
-
-        it 'index the model on create' do
-          model_class = Class.new(DummyIndexableModel) do
-            index_callbacks 'dummies_index', on: [event]
-          end
-          model = model_class.new
-          expect(DummiesIndex.repo).to receive(:serialize).with(model).and_return(document)
-          expect(DummiesIndex.repo).to receive(:elasticsearch).and_return(backend_proxy)
-          expect(backend_proxy).to receive(:index_document).with(document, {}).and_return(:ok)
-          model.send(event)
-        end
-
-        it 'index the associated model using the block definition' do
-          model_class = Class.new(DummyIndexableModel) do
-            index_callbacks 'dummies_index', on: [event] do
-              association
-            end
-
-            protected
-
-            def association
-              :other
-            end
-          end
-          model = model_class.new
-          expect(DummiesIndex.repo).to receive(:serialize).with(:other).and_return(document)
-          expect(DummiesIndex.repo).to receive(:elasticsearch).and_return(backend_proxy)
-          expect(backend_proxy).to receive(:index_document).with(document, {}).and_return(:ok)
-          model.send(event)
-        end
-
-        it 'does not index when the hooks are globally disabled' do
-          model_class = Class.new(DummyIndexableModel) do
-            index_callbacks 'dummies_index', on: [event]
-          end
-          model = model_class.new
-
-          Esse::ActiveRecord::Hooks.without_indexing do
-            expect(DummiesIndex.repo).not_to receive(:serialize)
-            expect(DummiesIndex.repo).not_to receive(:elasticsearch)
-            model.send(event)
-          end
-        end
-
-        it 'does not index when the hooks are disabled for the model' do
-          model_class = Class.new(DummyIndexableModel) do
-            index_callbacks 'dummies_index', on: [event]
-          end
-          model = model_class.new
-          model_class.without_indexing do
-            expect(DummiesIndex.repo).not_to receive(:serialize)
-            expect(DummiesIndex.repo).not_to receive(:elasticsearch)
-            model.send(event)
-          end
-        end
-
-        it 'allows to select which indices will not execute indexing callbacks' do
-          stub_index(:others) do
-            repository(:other, const: true) {}
-          end
-
-          model_class = Class.new(DummyIndexableModel) do
-            index_callbacks 'dummies', on: [event]
-            index_callbacks 'others:other', on: [event]
-          end
-          model = model_class.new
-          model_class.without_indexing(DummiesIndex) do
-            expect(DummiesIndex::Dummy).not_to receive(:serialize)
-            expect(DummiesIndex::Dummy).not_to receive(:index_document)
-            expect(OthersIndex::Other).to receive(:serialize).with(model).and_return(document)
-            expect(OthersIndex::Other).to receive(:elasticsearch).and_return(backend_proxy)
-            expect(backend_proxy).to receive(:index_document).with(document, {}).and_return(:ok)
-            model.send(event)
-          end
+    stub_esse_index(:states) do
+      repository :state, const: true do
+        document do |state, **|
+          {
+            _id: state.id,
+            name: state.name,
+          }
         end
       end
     end
 
-    include_examples 'index document callbacks', :create
-    include_examples 'index document callbacks', :update
-
-    context 'on destroy' do
-      let(:document) { double }
-
-      before do
-        stub_index(:dummies) do
-          repository :dummy, const: true do
-          end
+    stub_esse_index(:geographies) do
+      repository :state, const: true do
+        document do |state, **|
+          {
+            _id: state.id,
+            name: state.name,
+            type: 'state',
+          }
         end
       end
 
+      repository :county, const: true do
+        document do |county, **|
+          {
+            _id: county.id,
+            name: county.name,
+            type: 'county',
+          }.tap do |doc|
+            doc[:state] = { id: county.state.id, name: county.state.name } if county.state
+          end
+        end
+      end
+    end
+  end
+
+  after do
+    Esse::ActiveRecord::Hooks.instance_variable_set(:@models, @models_value_backup) # rubocop:disable RSpec/InstanceVariable
+    clean_db
+  end
+
+  describe '.index_callbacks' do
+    context 'when on :create' do
+      let(:index_ok_response) { { 'result' => 'indexed' } }
+
       it 'register the model class into Esse::ActiveRecord::Hooks.models' do
-        model_class = Class.new(DummyIndexableModel) do
-          index_callbacks 'dummies_index', on: %i[destroy]
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'states_index', on: %i[create]
         end
         expect(Esse::ActiveRecord::Hooks.models).to include(model_class)
       end
 
       it 'index the model on create' do
-        model_class = Class.new(DummyIndexableModel) do
-          index_callbacks 'dummies_index', on: %i[destroy]
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'states_index', on: %i[create]
         end
-        model = model_class.new
-        expect(DummiesIndex.repo).to receive(:serialize).with(model).and_return(document)
-        expect(DummiesIndex.repo).to receive(:elasticsearch).and_return(backend_proxy)
-        expect(backend_proxy).to receive(:delete_document).with(document, {}).and_return(:ok)
-        model.destroy
+        model = build_record(model_class, name: 'Illinois', id: SecureRandom.uuid)
+
+        expect(StatesIndex).to receive(:index).and_call_original
+        expect(StatesIndex).to esse_receive_request(:index).with(
+          id: model.id,
+          index: StatesIndex.index_name,
+          body: {name: 'Illinois'},
+        ).and_return(index_ok_response)
+
+        model.save
       end
 
       it 'index the associated model using the block definition' do
-        model_class = Class.new(DummyIndexableModel) do
-          index_callbacks 'dummies_index', on: %i[destroy] do
-            association
-          end
-
-          protected
-
-          def association
-            :other
+        model_class = Class.new(County) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'geographies:state', on: %i[create] do
+            state
           end
         end
-        model = model_class.new
-        expect(DummiesIndex.repo).to receive(:serialize).with(:other).and_return(document)
-        expect(DummiesIndex.repo).to receive(:elasticsearch).and_return(backend_proxy)
-        expect(backend_proxy).to receive(:delete_document).with(document, {}).and_return(:ok)
-        model.destroy
+        state = build_record(State, name: 'Illinois', id: SecureRandom.uuid)
+        county = build_record(model_class, name: 'Cook', state: state)
+
+        expect(GeographiesIndex).to receive(:index).and_call_original
+        expect(GeographiesIndex).to esse_receive_request(:index).with(
+          id: state.id,
+          index: GeographiesIndex.index_name,
+          body: {name: 'Illinois', type: 'state'},
+        ).and_return(index_ok_response)
+
+        county.save
       end
 
       it 'does not index when the hooks are globally disabled' do
-        model_class = Class.new(DummyIndexableModel) do
-          index_callbacks 'dummies_index', on: %i[destroy]
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'geographies:state', on: %i[create]
         end
-        model = model_class.new
+        model = build_record(model_class, name: 'Illinois', id: SecureRandom.uuid)
 
+        expect(GeographiesIndex).not_to receive(:index)
         Esse::ActiveRecord::Hooks.without_indexing do
-          expect(DummiesIndex.repo).not_to receive(:serialize)
-          expect(DummiesIndex.repo).not_to receive(:elasticsearch)
-          model.destroy
+          model.save
         end
       end
 
       it 'does not index when the hooks are disabled for the model' do
-        model_class = Class.new(DummyIndexableModel) do
-          index_callbacks 'dummies_index', on: %i[destroy]
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'geographies:state', on: %i[create]
         end
-        model = model_class.new
+        model = build_record(model_class, name: 'Illinois', id: SecureRandom.uuid)
+        expect(GeographiesIndex).not_to receive(:index)
         model_class.without_indexing do
-          expect(DummiesIndex.repo).not_to receive(:serialize)
-          expect(DummiesIndex.repo).not_to receive(:elasticsearch)
-          model.destroy
+          model.save
         end
       end
 
       it 'allows to select which indices will not execute indexing callbacks' do
-        stub_index(:others) do
-          repository(:other, const: true) {}
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'states', on: %i[create]
+          index_callbacks 'geographies:state', on: %i[create]
         end
+        model = build_record(model_class, name: 'Illinois', id: SecureRandom.uuid)
+        expect(GeographiesIndex).not_to receive(:index)
+        expect(StatesIndex).to receive(:index).and_call_original
+        expect(StatesIndex).to esse_receive_request(:index).with(
+          id: model.id,
+          index: StatesIndex.index_name,
+          body: {name: 'Illinois'},
+        ).and_return(index_ok_response)
+        model_class.without_indexing(GeographiesIndex) do
+          model.save
+        end
+      end
+    end
 
-        model_class = Class.new(DummyIndexableModel) do
-          index_callbacks 'dummies:dummy', on: %i[destroy]
-          index_callbacks 'others:other', on: %i[destroy]
+    context 'when on :update' do
+      let(:index_ok_response) { { 'result' => 'indexed' } }
+
+      it 'register the model class into Esse::ActiveRecord::Hooks.models' do
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'states_index', on: %i[update]
         end
-        model = model_class.new
-        model_class.without_indexing(DummiesIndex) do
-          expect(DummiesIndex::Dummy).not_to receive(:serialize)
-          expect(DummiesIndex::Dummy).not_to receive(:delete_document)
-          expect(OthersIndex::Other).to receive(:serialize).with(model).and_return(document)
-          expect(OthersIndex::Other).to receive(:elasticsearch).and_return(backend_proxy)
-          expect(backend_proxy).to receive(:delete_document).with(document, {}).and_return(:ok)
+        expect(Esse::ActiveRecord::Hooks.models).to include(model_class)
+      end
+
+      it 'index the model on update' do
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'states_index', on: %i[update]
+        end
+        model = create_record(model_class, name: 'Illinois')
+
+        expect(StatesIndex).to receive(:index).and_call_original
+        expect(StatesIndex).to esse_receive_request(:index).with(
+          id: model.id,
+          index: StatesIndex.index_name,
+          body: {name: 'Illinois'},
+        ).and_return(index_ok_response)
+
+        model.touch
+      end
+
+      it 'index the associated model using the block definition' do
+        model_class = Class.new(County) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'geographies:state', on: %i[update] do
+            state
+          end
+        end
+        state = create_record(State, name: 'Illinois')
+        county = create_record(model_class, name: 'Cook', state: state)
+
+        expect(GeographiesIndex).to receive(:index).and_call_original
+        expect(GeographiesIndex).to esse_receive_request(:index).with(
+          id: state.id,
+          index: GeographiesIndex.index_name,
+          body: {name: 'Illinois', type: 'state'},
+        ).and_return(index_ok_response)
+
+        county.touch
+      end
+
+      it 'does not index when the hooks are globally disabled' do
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'geographies:state', on: %i[update]
+        end
+        model = create_record(model_class, name: 'Illinois')
+
+        expect(GeographiesIndex).not_to receive(:index)
+        Esse::ActiveRecord::Hooks.without_indexing do
+          model.touch
+        end
+      end
+
+      it 'does not index when the hooks are disabled for the model' do
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'geographies:state', on: %i[update]
+        end
+        model = create_record(model_class, name: 'Illinois')
+        expect(GeographiesIndex).not_to receive(:index)
+        model_class.without_indexing do
+          model.touch
+        end
+      end
+
+      it 'allows to select which indices will not execute indexing callbacks' do
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'states', on: %i[update]
+          index_callbacks 'geographies:state', on: %i[update]
+        end
+        model = create_record(model_class, name: 'Illinois')
+        expect(GeographiesIndex).not_to receive(:index)
+        expect(StatesIndex).to receive(:index).and_call_original
+        expect(StatesIndex).to esse_receive_request(:index).with(
+          id: model.id,
+          index: StatesIndex.index_name,
+          body: {name: 'Illinois'},
+        ).and_return(index_ok_response)
+        model_class.without_indexing(GeographiesIndex) do
+          model.touch
+        end
+      end
+    end
+
+    context 'when on destroy' do
+      let(:delete_ok_response) { { 'result' => 'deleted' } }
+
+      it 'register the model class into Esse::ActiveRecord::Hooks.models' do
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'states', on: %i[destroy]
+        end
+        expect(Esse::ActiveRecord::Hooks.models).to include(model_class)
+      end
+
+      it 'removes the document on destroy' do
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'states', on: %i[destroy]
+        end
+        model = create_record(model_class, name: 'Illinois')
+        expect(StatesIndex).to receive(:delete).and_call_original
+        expect(StatesIndex).to esse_receive_request(:delete).with(
+          id: model.id,
+        ).and_return(delete_ok_response)
+        model.destroy
+      end
+
+      it 'does not raise error when the document does not exist' do
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'geographies:state', on: %i[destroy]
+        end
+        model = create_record(model_class, name: 'Illinois')
+        expect(GeographiesIndex).to receive(:delete).and_call_original
+        expect(GeographiesIndex).to esse_receive_request(:delete).with(
+          id: model.id,
+        ).and_raise_http_status(404, { 'error' => { 'type' => 'not_found' } })
+        expect { model.destroy }.not_to raise_error
+      end
+
+      it 'removes the associated model using the block definition' do
+        model_class = Class.new(County) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'geographies:state', on: %i[destroy] do
+            state
+          end
+        end
+        state = create_record(State, name: 'Illinois')
+        county = create_record(model_class, name: 'Cook', state: state)
+        expect(GeographiesIndex).to receive(:delete).and_call_original
+        expect(GeographiesIndex).to esse_receive_request(:delete).with(
+          id: state.id,
+        ).and_return(delete_ok_response)
+        county.destroy
+      end
+
+      it 'does not perform delete request when the hooks are globally disabled' do
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'geographies:state', on: %i[destroy]
+        end
+        model = create_record(model_class, name: 'Illinois')
+
+        expect(GeographiesIndex).not_to receive(:delete)
+        Esse::ActiveRecord::Hooks.without_indexing do
+          model.destroy
+        end
+      end
+
+      it 'does not perform delete request when the hooks are disabled for the model' do
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'geographies:state', on: %i[destroy]
+        end
+        model = create_record(model_class, name: 'Illinois')
+
+        expect(GeographiesIndex).not_to receive(:delete)
+        model_class.without_indexing do
+          model.destroy
+        end
+      end
+
+      it 'allows to select which indices will NOT perform :delete request during callbacks' do
+        model_class = Class.new(State) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'states:state', on: %i[destroy]
+          index_callbacks 'geographies:state', on: %i[destroy]
+        end
+        model = create_record(model_class, name: 'Illinois')
+
+        expect(GeographiesIndex).not_to receive(:delete)
+        expect(StatesIndex).to receive(:delete).and_call_original
+        expect(StatesIndex).to esse_receive_request(:delete).with(
+          id: model.id,
+        ).and_return(delete_ok_response)
+
+        model_class.without_indexing(GeographiesIndex) do
           model.destroy
         end
       end

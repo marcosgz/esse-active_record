@@ -28,7 +28,7 @@ class UsersIndex < Esse::Index
 
   repository :user do
     collection ::User
-    serializer # ...
+    document # ...
   end
 end
 ```
@@ -41,12 +41,12 @@ class UsersIndex < Esse::Index
 
   repository :account do
     collection ::Account
-    serializer # ...
+    document # ...
   end
 
   repository :admin do
     collection ::User.where(admin: true)
-    serializer # ...
+    document # ...
   end
 end
 ```
@@ -63,12 +63,12 @@ class UsersIndex < Esse::Index
       scope :active, -> { where(active: true) }
       scope :role, ->(role) { where(role: role) }
     end
-    serializer # ...
+    document # ...
   end
 end
 
 # Import data using the scopes
-#   > UsersIndex.elasticsearch.import(context: { active: true, role: 'admin' })
+#   > UsersIndex.import(context: { active: true, role: 'admin' })
 #
 # Streaming data using the scopes
 #   > UsersIndex.documents(active: true, role: 'admin').first
@@ -76,7 +76,7 @@ end
 
 ## Collection Batch Context
 
-Assume that you have a collection of orders and you want to also include the customer data that lives in a external system. To avoid making a request for each order, you can use the `batch_context` to fetch the data in batches and make it available in the serializer context.
+Assume that you have a collection of orders and you want to also include the customer data that lives in a external system. To avoid making a request for each order, you can use the `batch_context` to fetch the data in batches and make it available in the document context.
 
 ```ruby
 class OrdersIndex < Esse::Index
@@ -85,12 +85,12 @@ class OrdersIndex < Esse::Index
   repository :order do
     collection ::Order do
       batch_context :customers do |orders, **_existing_context|
-        # The return value will be available in the serializer context
+        # The return value will be available in the document context
         # { customers: <value returned from this block> }
         ExternalSystem::Customer.find_all_by_ids(orders.map(&:customer_id)).index_by(&:id) # => { 1 => <Customer>, 2 => <Customer> }
       end
     end
-    serializer do |order, customers: {}, **_|
+    document do |order, customers: {}, **_|
       customer = customers[order.customer_id]
       {
         id: order.id,
@@ -113,7 +113,7 @@ class OrdersIndex < Esse::Index
 
   repository :order do
     collection ::Order.includes(:customer)
-    serializer do |order, **_|
+    document do |order, **_|
       {
         id: order.id,
         customer: {
@@ -136,7 +136,7 @@ As default the active record support 3 streaming options:
 This is useful when you want to import simultaneous data. You can make one process import all records between 1 and 10,000, and another from 10,000 and beyond
 
 ```ruby
-UsersIndex.elasticsearch.import(context: { start: 1, finish: 10000, batch_size: 500 })
+UsersIndex.import(context: { start: 1, finish: 10000, batch_size: 500 })
 ```
 
 The default valueof `batch_size` can be also defined in the `collection` configuration:
@@ -147,7 +147,7 @@ class UsersIndex < Esse::Index
 
   repository :user do
     collection ::User, batch_size: 500
-    serializer # ...
+    document # ...
   end
 end
 ```
@@ -162,7 +162,7 @@ class UsersIndex < Esse::Index
 
   repository :user, const: true do
     collection ::User
-    serializer # ...
+    document # ...
   end
 
 end

@@ -59,19 +59,19 @@ RSpec.describe Esse::ActiveRecord::Collection do
       it 'stream data in batches according to the :batch_size option' do
         instance = collection_class.new(batch_size: 1)
 
-        expect { |b| instance.each(&b) }.to yield_successive_args([dogs[0..0], {}], [dogs[1..1], {}], [dogs[2..2], {}])
+        expect { |b| instance.each(&b) }.to yield_successive_args(dogs[0..0], dogs[1..1], dogs[2..2])
       end
 
       it 'stream data in batches according to the :batch_size option and :start option' do
         instance = collection_class.new(batch_size: 1, start: dogs[1].id)
 
-        expect { |b| instance.each(&b) }.to yield_successive_args([dogs[1..1], {}], [dogs[2..2], {}])
+        expect { |b| instance.each(&b) }.to yield_successive_args(dogs[1..1], dogs[2..2])
       end
 
       it 'stream data in batches according to the :batch_size option and :finish option' do
         instance = collection_class.new(batch_size: 1, finish: dogs[1].id)
 
-        expect { |b| instance.each(&b) }.to yield_successive_args([dogs[0..0], {}], [dogs[1..1], {}])
+        expect { |b| instance.each(&b) }.to yield_successive_args(dogs[0..0], dogs[1..1])
       end
     end
 

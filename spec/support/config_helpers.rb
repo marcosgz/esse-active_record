@@ -29,6 +29,15 @@ module ConfigHelpers
     reset_config!
   end
 
+  def stub_cluster_info(distribution: 'elasticsearch', version: '7.11.0')
+    Esse.config.cluster_ids.each do |id|
+      Esse.config.cluster(id).instance_variable_set(:@info, {
+        distribution: distribution,
+        version: version,
+      })
+    end
+  end
+
   def with_cluster_config(id: :default, **opts)
     with_config { |c| c.cluster(id).assign(opts) }
   end

@@ -27,7 +27,7 @@ RSpec.describe Esse::ActiveRecord::Hooks do
   let(:repositories) { AnimalsIndex.repo_hash.values + UsersIndex.repo_hash.values }
 
   before do
-    stub_index(:animals) do
+    stub_esse_index(:animals) do
       plugin :active_record
 
       repository :cat, const: true do
@@ -36,14 +36,14 @@ RSpec.describe Esse::ActiveRecord::Hooks do
       end
     end
 
-    stub_index(:users) do
+    stub_esse_index(:users) do
       plugin :active_record
 
       repository :user, const: true do
       end
     end
 
-    Esse::ActiveRecord::Hooks.send(:global_store)[Esse::ActiveRecord::Hooks::STORE_STATE_KEY] = nil
+    described_class.send(:global_store)[Esse::ActiveRecord::Hooks::STORE_STATE_KEY] = nil
     allow(described_class).to receive(:all_repos).and_return(repositories)
   end
 

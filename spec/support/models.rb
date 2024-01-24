@@ -16,12 +16,14 @@ ActiveRecord::Schema.define do
     t.column :name, :string
     t.column :abbr_name, :string
     t.column :iso_country, :string # ISO 3166-1 country/territory code
+    t.timestamps
   end
 
   create_table :counties do |t|
     t.column :name, :string
     t.column :iso_country, :string # ISO 3166-1 country/territory code
     t.column :state_id, :integer
+    t.timestamps
   end
 end
 
@@ -46,6 +48,12 @@ def create_record(klass, **attrs)
   @tables ||= []
   @tables |= [klass.table_name]
   klass.create!(attrs)
+end
+
+def build_record(klass, **attrs)
+  @tables ||= []
+  @tables |= [klass.table_name]
+  klass.new(attrs)
 end
 
 def clean_db

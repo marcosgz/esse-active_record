@@ -17,6 +17,22 @@ AllCops:
     - "db/**/*"
     - "tmp/**/*"
     - "vendor/**/*"
+  NewCops: enable
+
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Enabled: false
+
+RSpec/MessageSpies:
+  Enabled: false
+
+RSpec/FilePath:
+  Enabled: false
+
+RSpec/SpecFilePathFormat:
+  Enabled: false
 
 Layout/SpaceInsideHashLiteralBraces:
   Enabled: false

@@ -31,7 +31,7 @@ module Esse
 
           esse_index_repos[index_repo_name] ||= {}
           esse_index_repos[index_repo_name][operation_name] = {
-            record: (block || -> { self }),
+            record: block || -> { self },
             options: options,
           }
 
@@ -45,7 +45,7 @@ module Esse
               record = instance_exec(&record) if record.respond_to?(:call)
               repo = Esse::ActiveRecord::Hooks.resolve_index_repository(index_repo_name)
               document = repo.serialize(record)
-              repo.elasticsearch.index_document(document, **opts[:options]) if document
+              repo.index.index(document, **opts[:options]) if document
               true
             end
           end
@@ -56,7 +56,9 @@ module Esse
               record = instance_exec(&record) if record.respond_to?(:call)
               repo = Esse::ActiveRecord::Hooks.resolve_index_repository(index_repo_name)
               document = repo.serialize(record)
-              repo.elasticsearch.delete_document(document, **opts[:options]) if document
+              repo.index.delete(document, **opts[:options]) if document
+              true
+            rescue Esse::Transport::NotFoundError
               true
             end
           end
