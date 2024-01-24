@@ -22,12 +22,13 @@ jobs:
       BUNDLE_GEMFILE: ${{ github.workspace }}/${{ matrix.gemfile }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install SQLite3
+        run: sudo apt-get install sqlite3 libsqlite3-dev
       - name: Set up using Ruby ${{ matrix.ruby-version }} with Gemfile '${{ matrix.gemfile }}'
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true
-          rubygems: latest
       - name: Run linter
         run: bundle exec rubocop
       - name: Run tests
