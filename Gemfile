@@ -9,6 +9,7 @@ gem 'sqlite3', '~> 1.7.3'
 gem 'activerecord', '~> 5.2'
 gem 'esse-rspec', '~> 0.0.6'
 gem 'elasticsearch', '~> 7.17', '>= 7.17.10'
+gem 'esse-redis-storage', '~> 0.0.1'
 
 # Specify your gem's dependencies in esse-active_record.gemspec
 gemspec

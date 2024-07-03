@@ -27,6 +27,7 @@ GEM
     base64 (0.2.0)
     coderay (1.1.3)
     concurrent-ruby (1.2.3)
+    connection_pool (2.4.1)
     crack (0.4.5)
       rexml
     diff-lcs (1.5.0)
@@ -42,6 +43,9 @@ GEM
     esse (0.3.1)
       multi_json
       thor (>= 0.19)
+    esse-redis-storage (0.0.1)
+      esse (>= 0.2.4)
+      redis (>= 4.0.0)
     esse-rspec (0.0.6)
       esse (>= 0.2.4)
       rspec (>= 3)
@@ -71,6 +75,10 @@ GEM
     racc (1.7.3)
     rainbow (3.1.1)
     rake (13.1.0)
+    redis (5.2.0)
+      redis-client (>= 0.22.0)
+    redis-client (0.22.2)
+      connection_pool
     regexp_parser (2.9.0)
     rexml (3.2.6)
     rspec (3.12.0)
@@ -144,6 +152,7 @@ DEPENDENCIES
   elasticsearch (~> 7.17, >= 7.17.10)
   esse (~> 0.3.1)
   esse-active_record!
+  esse-redis-storage (~> 0.0.1)
   esse-rspec (~> 0.0.6)
   pry
   rake
