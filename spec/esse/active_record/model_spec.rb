@@ -173,70 +173,6 @@ RSpec.describe Esse::ActiveRecord::Model do
         model.touch
       end
 
-      context "when the document has a routing key" do
-        let(:model_class) do
-          Class.new(County) do
-            include Esse::ActiveRecord::Model
-            index_callbacks 'geographies:county', on: %i[update]
-          end
-        end
-        let(:il) { create_record(State, name: 'Illinois') }
-        let(:ny) { create_record(State, name: 'New York') }
-        let(:county) { create_record(model_class, name: 'Cook', state: il) }
-
-        it 'indexes the document in new routing and deletes the document from previous routing' do
-          expect(GeographiesIndex).to receive(:index).and_call_original
-          expect(GeographiesIndex).to esse_receive_request(:index).with(
-            id: county.id,
-            index: GeographiesIndex.index_name,
-            routing: ny.id,
-            body: {name: 'Cook', type: 'county', state: { id: ny.id, name: ny.name }},
-          ).and_return(index_ok_response)
-
-          expect(GeographiesIndex).to receive(:delete).and_call_original
-          expect(GeographiesIndex).to esse_receive_request(:delete).with(
-            id: county.id,
-            index: GeographiesIndex.index_name,
-            routing: il.id,
-          ).and_return('result' => 'deleted')
-
-          county.update(state: ny)
-        end
-
-        it 'does not delete the document when the routing key is not changed' do
-          expect(GeographiesIndex).to receive(:index).and_call_original
-          expect(GeographiesIndex).to esse_receive_request(:index).with(
-            id: county.id,
-            index: GeographiesIndex.index_name,
-            routing: il.id,
-            body: {name: 'Cook County', type: 'county', state: { id: il.id, name: il.name }},
-          ).and_return(index_ok_response)
-
-          expect(GeographiesIndex).not_to receive(:delete)
-
-          county.update(name: 'Cook County')
-        end
-
-        it 'does not raise error when the document does not exist' do
-          expect(GeographiesIndex).to receive(:index).and_call_original
-          expect(GeographiesIndex).to esse_receive_request(:index).with(
-            id: county.id,
-            index: GeographiesIndex.index_name,
-            routing: ny.id,
-            body: {name: 'Cook', type: 'county', state: { id: ny.id, name: ny.name }},
-          ).and_return(index_ok_response)
-
-          expect(GeographiesIndex).to receive(:delete).and_call_original
-          expect(GeographiesIndex).to esse_receive_request(:delete).with(
-            id: county.id,
-            index: GeographiesIndex.index_name,
-            routing: il.id,
-          ).and_raise_http_status(404, { 'error' => { 'type' => 'not_found' } })
-
-          county.update(state: ny)
-        end
-      end
-
       it 'index the associated model using the block definition' do
         model_class = Class.new(County) do
           include Esse::ActiveRecord::Model
@@ -299,6 +235,70 @@ RSpec.describe Esse::ActiveRecord::Model do
         model_class.without_indexing(GeographiesIndex) do
           model.touch
         end
+      end
+    end
+
+    context 'when on :update with a the document that has a routing key' do
+      let(:model_class) do
+        Class.new(County) do
+          include Esse::ActiveRecord::Model
+          index_callbacks 'geographies:county', on: %i[update]
+        end
+      end
+      let(:il) { create_record(State, name: 'Illinois') }
+      let(:ny) { create_record(State, name: 'New York') }
+      let(:county) { create_record(model_class, name: 'Cook', state: il) }
+
+      it 'indexes the document in new routing and deletes the document from previous routing' do
+        expect(GeographiesIndex).to receive(:index).and_call_original
+        expect(GeographiesIndex).to esse_receive_request(:index).with(
+          id: county.id,
+          index: GeographiesIndex.index_name,
+          routing: ny.id,
+          body: {name: 'Cook', type: 'county', state: { id: ny.id, name: ny.name }},
+        ).and_return(index_ok_response)
+
+        expect(GeographiesIndex).to receive(:delete).and_call_original
+        expect(GeographiesIndex).to esse_receive_request(:delete).with(
+          id: county.id,
+          index: GeographiesIndex.index_name,
+          routing: il.id,
+        ).and_return('result' => 'deleted')
+
+        county.update(state: ny)
+      end
+
+      it 'does not delete the document when the routing key is not changed' do
+        expect(GeographiesIndex).to receive(:index).and_call_original
+        expect(GeographiesIndex).to esse_receive_request(:index).with(
+          id: county.id,
+          index: GeographiesIndex.index_name,
+          routing: il.id,
+          body: {name: 'Cook County', type: 'county', state: { id: il.id, name: il.name }},
+        ).and_return(index_ok_response)
+
+        expect(GeographiesIndex).not_to receive(:delete)
+
+        county.update(name: 'Cook County')
+      end
+
+      it 'does not raise error when the document does not exist' do
+        expect(GeographiesIndex).to receive(:index).and_call_original
+        expect(GeographiesIndex).to esse_receive_request(:index).with(
+          id: county.id,
+          index: GeographiesIndex.index_name,
+          routing: ny.id,
+          body: {name: 'Cook', type: 'county', state: { id: ny.id, name: ny.name }},
+        ).and_return(index_ok_response)
+
+        expect(GeographiesIndex).to receive(:delete).and_call_original
+        expect(GeographiesIndex).to esse_receive_request(:delete).with(
+          id: county.id,
+          index: GeographiesIndex.index_name,
+          routing: il.id,
+        ).and_raise_http_status(404, { 'error' => { 'type' => 'not_found' } })
+
+        county.update(state: ny)
       end
     end
 

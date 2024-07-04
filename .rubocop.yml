@@ -31,9 +31,6 @@ RSpec/MessageSpies:
 RSpec/FilePath:
   Enabled: false
 
-RSpec/SpecFilePathFormat:
-  Enabled: false
-
 Layout/SpaceInsideHashLiteralBraces:
   Enabled: false
 
