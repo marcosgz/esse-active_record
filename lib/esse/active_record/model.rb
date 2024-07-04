@@ -38,7 +38,7 @@ module Esse
           Esse::ActiveRecord::Hooks.register_model(self)
 
           if_enabled = -> { Esse::ActiveRecord::Hooks.enabled?(index_repo_name) && Esse::ActiveRecord::Hooks.enabled_for_model?(self.class, index_repo_name) }
-          (on & %i[create update]).each do |event|
+          (on & %i[create]).each do |event|
             after_commit(on: event, if: if_enabled) do
               opts = self.class.esse_index_repos.fetch(index_repo_name).fetch(operation_name)
               record = opts.fetch(:record)
@@ -46,6 +46,34 @@ module Esse
               repo = Esse::ActiveRecord::Hooks.resolve_index_repository(index_repo_name)
               document = repo.serialize(record)
               repo.index.index(document, **opts[:options]) if document
+              true
+            end
+          end
+          (on & %i[update]).each do |event|
+            after_commit(on: event, if: if_enabled) do
+              opts = self.class.esse_index_repos.fetch(index_repo_name).fetch(operation_name)
+              record = opts.fetch(:record)
+              record = instance_exec(&record) if record.respond_to?(:call)
+              repo = Esse::ActiveRecord::Hooks.resolve_index_repository(index_repo_name)
+              document = repo.serialize(record)
+              next true unless document
+
+              repo.index.index(document, **opts[:options])
+              next true unless document.routing
+
+              prev_record = self.class.new(attributes.merge(previous_changes.transform_values(&:first))).tap(&:readonly!)
+              prev_document = repo.serialize(prev_record)
+
+              next true unless prev_document
+              next true if [prev_document.id, prev_document.routing].include?(nil)
+              next true if prev_document.routing == document.routing
+              next true if prev_document.id != document.id
+
+              begin
+                repo.index.delete(prev_document, **opts[:options])
+              rescue Esse::Transport::NotFoundError
+              end
+
               true
             end
           end
