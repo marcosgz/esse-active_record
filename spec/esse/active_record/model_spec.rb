@@ -239,6 +239,7 @@ RSpec.describe Esse::ActiveRecord::Model do
     end
 
     context 'when on :update with a the document that has a routing key' do
+      let(:index_ok_response) { { 'result' => 'indexed' } }
       let(:model_class) do
         Class.new(County) do
           include Esse::ActiveRecord::Model

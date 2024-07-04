@@ -46,3 +46,6 @@ Style/TrailingCommaInHashLiteral:
 Style/StringLiterals:
   Enabled: true
   EnforcedStyle: single_quotes
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
