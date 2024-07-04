@@ -37,7 +37,7 @@ RSpec.describe Esse::ActiveRecord::Model do
             _id: county.id,
             name: county.name,
             type: 'county',
-            routing: (county.state_id || 1),
+            routing: county.state_id || 1,
           }.tap do |doc|
             doc[:state] = { id: county.state.id, name: county.state.name } if county.state
           end

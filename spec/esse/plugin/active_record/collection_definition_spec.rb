@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do
+RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do # rubocop:disable RSpec/SpecFilePathFormat
   describe 'index collection definition' do
     context 'when the type is a model class' do
       it 'define collection with only class name without raise an error' do
