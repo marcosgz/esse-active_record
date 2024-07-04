@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    esse-active_record (0.2.0)
+    esse-active_record (0.2.1)
       activerecord (>= 4.2, < 8)
       esse (>= 0.2.3)
 
