@@ -4,7 +4,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.index_callback' do
   let(:backend_proxy) { double }
 
   before do
-    Thread.current[Esse::ActiveRecord::Hooks::STORE_STATE_KEY] = nil
+    clear_active_record_hooks
     @models_value_backup = Esse::ActiveRecord::Hooks.models.dup
     Esse::ActiveRecord::Hooks.models.clear
     stub_cluster_info

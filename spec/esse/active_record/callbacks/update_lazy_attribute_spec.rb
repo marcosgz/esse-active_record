@@ -30,6 +30,7 @@ RSpec.describe Esse::ActiveRecord::Callbacks::UpdateLazyAttribute do
 
     before do
       stub_cluster_info
+      clear_active_record_hooks
       stub_esse_index(:states) do
         repository :state, const: true do
           document do |state, **|

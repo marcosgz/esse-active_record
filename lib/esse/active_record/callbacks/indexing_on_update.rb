@@ -3,13 +3,20 @@
 module Esse::ActiveRecord
   module Callbacks
     class IndexingOnUpdate < Callback
+      attr_reader :update_with
+
+      def initialize(with: :index, **kwargs, &block)
+        @update_with = with
+        super(**kwargs, &block)
+      end
+
       def call(model)
         record = block_result || model
 
         document = repo.serialize(record)
         return true unless document
 
-        repo.index.index(document, **options)
+        update_document(document)
         return true unless document.routing
 
         prev_record = model.class.new(model.attributes.merge(model.previous_changes.transform_values(&:first))).tap(&:readonly!)
@@ -26,6 +33,20 @@ module Esse::ActiveRecord
         end
 
         true
+      end
+
+      protected
+
+      def update_document(document)
+        if update_with == :update
+          begin
+            repo.index.update(document, **options)
+          rescue Esse::Transport::NotFoundError
+            repo.index.index(document, **options)
+          end
+        else
+          repo.index.index(document, **options)
+        end
       end
     end
 

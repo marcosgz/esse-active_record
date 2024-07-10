@@ -36,7 +36,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
 
   before do
     DummyCallbackRepo.clear
-    Thread.current[Esse::ActiveRecord::Hooks::STORE_STATE_KEY] = nil
+    clear_active_record_hooks
     @__callbacks = Esse::ActiveRecord::Callbacks.instance_variable_get(:@callbacks)
     Esse::ActiveRecord::Callbacks.register_callback(:temp, :create, DumpTempCallbackOnCreate)
     Esse::ActiveRecord::Callbacks.register_callback(:temp, :update, DumpTempCallbackOnUpdate)

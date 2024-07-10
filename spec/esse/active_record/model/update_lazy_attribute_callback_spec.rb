@@ -8,8 +8,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.update_lazy_attribute_callback' do
   end
 
   before do
-    Thread.current[Esse::ActiveRecord::Hooks::STORE_STATE_KEY] = nil
-
+    clear_active_record_hooks
     @__hooks_models = Esse::ActiveRecord::Hooks.models.dup
     Esse::ActiveRecord::Hooks.models.clear
     stub_cluster_info
