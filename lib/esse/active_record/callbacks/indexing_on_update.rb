@@ -53,5 +53,3 @@ module Esse::ActiveRecord
     register_callback(:indexing, :update, IndexingOnUpdate)
   end
 end
-
-# Esse::Transport::NotFoundError
