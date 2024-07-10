@@ -49,7 +49,7 @@ module Esse
         # @raise [ArgumentError] when the repo and events are already registered
         # @raise [ArgumentError] when the specified index have multiple repos
         def index_callback(index_repo_name, on: %i[create update destroy], **options, &block)
-          esse_callback(index_repo_name, :index, on: on, **options, &block)
+          esse_callback(index_repo_name, :indexing, on: on, **options, &block)
         end
 
         # Disable indexing for the block execution on model level

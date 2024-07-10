@@ -13,6 +13,6 @@ module Esse::ActiveRecord
       end
     end
 
-    register_callback(:index, :destroy, IndexingOnDestroy)
+    register_callback(:indexing, :destroy, IndexingOnDestroy)
   end
 end

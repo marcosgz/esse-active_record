@@ -29,6 +29,6 @@ module Esse::ActiveRecord
       end
     end
 
-    register_callback(:index, :update, IndexingOnUpdate)
+    register_callback(:indexing, :update, IndexingOnUpdate)
   end
 end

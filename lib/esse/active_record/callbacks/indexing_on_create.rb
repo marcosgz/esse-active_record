@@ -11,6 +11,6 @@ module Esse::ActiveRecord
       end
     end
 
-    register_callback(:index, :create, IndexingOnCreate)
+    register_callback(:indexing, :create, IndexingOnCreate)
   end
 end
