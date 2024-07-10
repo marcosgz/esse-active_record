@@ -11,11 +11,14 @@ module Esse
       end
 
       module ClassMethods
+        extend Esse::Deprecations::Deprecate
+
         attr_reader :esse_callbacks
 
         def esse_index_repos
           esse_callbacks
         end
+        deprecate :esse_index_repos, :esse_callbacks, 2024, 12
 
         # Define callback for create/update/delete elasticsearch index document after model commit.
         #
@@ -95,7 +98,11 @@ module Esse
             end
           end
         end
-        alias_method :index_callbacks, :index_callback # backward compatibility
+
+        def index_callbacks(*args, **options, &block)
+          index_callback(*args, **options, &block)
+        end
+        deprecate :index_callbacks, :index_callback, 2024, 12
 
         # Disable indexing for the block execution on model level
         # Example:
