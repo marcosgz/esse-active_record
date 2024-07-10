@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe Esse::ActiveRecord::Model do
+RSpec.describe Esse::ActiveRecord::Model, '.index_callback' do
   let(:backend_proxy) { double }
 
   before do

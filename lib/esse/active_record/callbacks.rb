@@ -19,7 +19,7 @@ module Esse
     module Callbacks
       class << self
         def to_h
-          @callbacks || {}
+          @callbacks || {}.freeze
         end
 
         def register_callback(identifier, operation, callback_class)
@@ -29,12 +29,14 @@ module Esse
 
           key = :"#{identifier}_on_#{operation}"
 
-          @callbacks ||= {}
+          @callbacks = @callbacks ? @callbacks.dup : {}
           if @callbacks.key?(key)
             raise ArgumentError, "callback #{identifier} for #{operation} operation already registered"
           end
 
           @callbacks[key] = callback_class
+        ensure
+          @callbacks&.freeze
         end
 
         def registered?(identifier, operation)
@@ -59,3 +61,4 @@ end
 require_relative 'callbacks/indexing_on_create'
 require_relative 'callbacks/indexing_on_update'
 require_relative 'callbacks/indexing_on_destroy'
+require_relative 'callbacks/update_lazy_attribute'

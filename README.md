@@ -194,7 +194,7 @@ or by some specific list of index or index's repository
 ```ruby
 Esse::ActiveRecord::Hooks.disable!(UsersIndex.repo)
 Esse::ActiveRecord::Hooks.enable!(UsersIndex.repo)
-Esse::ActiveRecord::Hooks.without_indexing(AccountsIndex UsersIndex.repo, ) do
+Esse::ActiveRecord::Hooks.without_indexing(AccountsIndex, UsersIndex.repo) do
   10.times { User.create! }
 end
 ```
