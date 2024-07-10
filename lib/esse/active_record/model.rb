@@ -15,11 +15,6 @@ module Esse
 
         attr_reader :esse_callbacks
 
-        def esse_index_repos
-          esse_callbacks
-        end
-        deprecate :esse_index_repos, :esse_callbacks, 2024, 12
-
         # Define callback for create/update/delete elasticsearch index document after model commit.
         #
         # @param [String] index_repo_name The path of index and repository name.
@@ -99,11 +94,6 @@ module Esse
           end
         end
 
-        def index_callbacks(*args, **options, &block)
-          index_callback(*args, **options, &block)
-        end
-        deprecate :index_callbacks, :index_callback, 2024, 12
-
         # Disable indexing for the block execution on model level
         # Example:
         #  User.without_indexing { }
@@ -113,6 +103,16 @@ module Esse
             yield
           end
         end
+
+        def index_callbacks(*args, **options, &block)
+          index_callback(*args, **options, &block)
+        end
+        deprecate :index_callbacks, :index_callback, 2024, 12
+
+        def esse_index_repos
+          esse_callbacks
+        end
+        deprecate :esse_index_repos, :esse_callbacks, 2024, 12
       end
     end
   end
