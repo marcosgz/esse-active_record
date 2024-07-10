@@ -147,7 +147,7 @@ module Esse
         # Returns a list of all repositories for the given model
         # @return [Array<Symbol>]
         def model_repos(model_class)
-          expand_index_repos(*model_class.esse_index_repos.keys)
+          expand_index_repos(*model_class.esse_callbacks.keys)
         end
 
         # Returns a list of all repositories for the given model

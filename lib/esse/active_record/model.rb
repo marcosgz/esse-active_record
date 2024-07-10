@@ -7,11 +7,15 @@ module Esse
 
       def self.inherited(subclass)
         super
-        subclass.esse_index_repos = esse_index_repos.dup
+        subclass.instance_variable_set(:@esse_callbacks, esse_callbacks.dup)
       end
 
       module ClassMethods
-        attr_reader :esse_index_repos
+        attr_reader :esse_callbacks
+
+        def esse_index_repos
+          esse_callbacks
+        end
 
         # Define callback for create/update/delete elasticsearch index document after model commit.
         #
@@ -22,15 +26,15 @@ module Esse
         # @raise [ArgumentError] when the repo and events are already registered
         # @raise [ArgumentError] when the specified index have multiple repos
         def index_callback(index_repo_name, on: %i[create update destroy], **options, &block)
-          @esse_index_repos ||= {}
+          @esse_callbacks ||= {}
 
           operation_name = :index
-          if esse_index_repos.dig(index_repo_name, operation_name)
+          if esse_callbacks.dig(index_repo_name, operation_name)
             raise ArgumentError, format('index repository %<name>p already registered %<op>s operation', name: index_repo_name, op: operation_name)
           end
 
-          esse_index_repos[index_repo_name] ||= {}
-          esse_index_repos[index_repo_name][operation_name] = {
+          esse_callbacks[index_repo_name] ||= {}
+          esse_callbacks[index_repo_name][operation_name] = {
             record: block || -> { self },
             options: options,
           }
@@ -40,7 +44,7 @@ module Esse
           if_enabled = -> { Esse::ActiveRecord::Hooks.enabled?(index_repo_name) && Esse::ActiveRecord::Hooks.enabled_for_model?(self.class, index_repo_name) }
           (on & %i[create]).each do |event|
             after_commit(on: event, if: if_enabled) do
-              opts = self.class.esse_index_repos.fetch(index_repo_name).fetch(operation_name)
+              opts = self.class.esse_callbacks.fetch(index_repo_name).fetch(operation_name)
               record = opts.fetch(:record)
               record = instance_exec(&record) if record.respond_to?(:call)
               repo = Esse::ActiveRecord::Hooks.resolve_index_repository(index_repo_name)
@@ -51,7 +55,7 @@ module Esse
           end
           (on & %i[update]).each do |event|
             after_commit(on: event, if: if_enabled) do
-              opts = self.class.esse_index_repos.fetch(index_repo_name).fetch(operation_name)
+              opts = self.class.esse_callbacks.fetch(index_repo_name).fetch(operation_name)
               record = opts.fetch(:record)
               record = instance_exec(&record) if record.respond_to?(:call)
               repo = Esse::ActiveRecord::Hooks.resolve_index_repository(index_repo_name)
@@ -79,7 +83,7 @@ module Esse
           end
           (on & %i[destroy]).each do |event|
             after_commit(on: event, if: if_enabled) do
-              opts = self.class.esse_index_repos.fetch(index_repo_name).fetch(operation_name)
+              opts = self.class.esse_callbacks.fetch(index_repo_name).fetch(operation_name)
               record = opts.fetch(:record)
               record = instance_exec(&record) if record.respond_to?(:call)
               repo = Esse::ActiveRecord::Hooks.resolve_index_repository(index_repo_name)
