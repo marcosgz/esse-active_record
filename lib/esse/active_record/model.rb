@@ -21,7 +21,7 @@ module Esse
         #   For namespace, use `/` as the separator.
         # @raise [ArgumentError] when the repo and events are already registered
         # @raise [ArgumentError] when the specified index have multiple repos
-        def index_callbacks(index_repo_name, on: %i[create update destroy], **options, &block)
+        def index_callback(index_repo_name, on: %i[create update destroy], **options, &block)
           @esse_index_repos ||= {}
 
           operation_name = :index
@@ -91,6 +91,7 @@ module Esse
             end
           end
         end
+        alias_method :index_callbacks, :index_callback # backward compatibility
 
         # Disable indexing for the block execution on model level
         # Example:

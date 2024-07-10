@@ -51,14 +51,14 @@ RSpec.describe Esse::ActiveRecord::Model do
     clean_db
   end
 
-  describe '.index_callbacks' do
+  describe '.index_callback' do
     context 'when on :create' do
       let(:index_ok_response) { { 'result' => 'indexed' } }
 
       it 'register the model class into Esse::ActiveRecord::Hooks.models' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'states_index', on: %i[create]
+          index_callback 'states_index', on: %i[create]
         end
         expect(Esse::ActiveRecord::Hooks.models).to include(model_class)
       end
@@ -66,7 +66,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'index the model on create' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'states_index', on: %i[create]
+          index_callback 'states_index', on: %i[create]
         end
         model = build_record(model_class, name: 'Illinois', id: SecureRandom.uuid)
 
@@ -83,7 +83,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'index the associated model using the block definition' do
         model_class = Class.new(County) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'geographies:state', on: %i[create] do
+          index_callback 'geographies:state', on: %i[create] do
             state
           end
         end
@@ -103,7 +103,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'does not index when the hooks are globally disabled' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'geographies:state', on: %i[create]
+          index_callback 'geographies:state', on: %i[create]
         end
         model = build_record(model_class, name: 'Illinois', id: SecureRandom.uuid)
 
@@ -116,7 +116,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'does not index when the hooks are disabled for the model' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'geographies:state', on: %i[create]
+          index_callback 'geographies:state', on: %i[create]
         end
         model = build_record(model_class, name: 'Illinois', id: SecureRandom.uuid)
         expect(GeographiesIndex).not_to receive(:index)
@@ -128,8 +128,8 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'allows to select which indices will not execute indexing callbacks' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'states', on: %i[create]
-          index_callbacks 'geographies:state', on: %i[create]
+          index_callback 'states', on: %i[create]
+          index_callback 'geographies:state', on: %i[create]
         end
         model = build_record(model_class, name: 'Illinois', id: SecureRandom.uuid)
         expect(GeographiesIndex).not_to receive(:index)
@@ -151,7 +151,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'register the model class into Esse::ActiveRecord::Hooks.models' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'states_index', on: %i[update]
+          index_callback 'states_index', on: %i[update]
         end
         expect(Esse::ActiveRecord::Hooks.models).to include(model_class)
       end
@@ -159,7 +159,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'index the model on update' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'states_index', on: %i[update]
+          index_callback 'states_index', on: %i[update]
         end
         model = create_record(model_class, name: 'Illinois')
 
@@ -176,7 +176,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'index the associated model using the block definition' do
         model_class = Class.new(County) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'geographies:state', on: %i[update] do
+          index_callback 'geographies:state', on: %i[update] do
             state
           end
         end
@@ -196,7 +196,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'does not index when the hooks are globally disabled' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'geographies:state', on: %i[update]
+          index_callback 'geographies:state', on: %i[update]
         end
         model = create_record(model_class, name: 'Illinois')
 
@@ -209,7 +209,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'does not index when the hooks are disabled for the model' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'geographies:state', on: %i[update]
+          index_callback 'geographies:state', on: %i[update]
         end
         model = create_record(model_class, name: 'Illinois')
         expect(GeographiesIndex).not_to receive(:index)
@@ -221,8 +221,8 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'allows to select which indices will not execute indexing callbacks' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'states', on: %i[update]
-          index_callbacks 'geographies:state', on: %i[update]
+          index_callback 'states', on: %i[update]
+          index_callback 'geographies:state', on: %i[update]
         end
         model = create_record(model_class, name: 'Illinois')
         expect(GeographiesIndex).not_to receive(:index)
@@ -243,7 +243,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       let(:model_class) do
         Class.new(County) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'geographies:county', on: %i[update]
+          index_callback 'geographies:county', on: %i[update]
         end
       end
       let(:il) { create_record(State, name: 'Illinois') }
@@ -309,7 +309,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'register the model class into Esse::ActiveRecord::Hooks.models' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'states', on: %i[destroy]
+          index_callback 'states', on: %i[destroy]
         end
         expect(Esse::ActiveRecord::Hooks.models).to include(model_class)
       end
@@ -317,7 +317,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'removes the document on destroy' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'states', on: %i[destroy]
+          index_callback 'states', on: %i[destroy]
         end
         model = create_record(model_class, name: 'Illinois')
         expect(StatesIndex).to receive(:delete).and_call_original
@@ -330,7 +330,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'does not raise error when the document does not exist' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'geographies:state', on: %i[destroy]
+          index_callback 'geographies:state', on: %i[destroy]
         end
         model = create_record(model_class, name: 'Illinois')
         expect(GeographiesIndex).to receive(:delete).and_call_original
@@ -343,7 +343,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'removes the associated model using the block definition' do
         model_class = Class.new(County) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'geographies:state', on: %i[destroy] do
+          index_callback 'geographies:state', on: %i[destroy] do
             state
           end
         end
@@ -359,7 +359,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'does not perform delete request when the hooks are globally disabled' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'geographies:state', on: %i[destroy]
+          index_callback 'geographies:state', on: %i[destroy]
         end
         model = create_record(model_class, name: 'Illinois')
 
@@ -372,7 +372,7 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'does not perform delete request when the hooks are disabled for the model' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'geographies:state', on: %i[destroy]
+          index_callback 'geographies:state', on: %i[destroy]
         end
         model = create_record(model_class, name: 'Illinois')
 
@@ -385,8 +385,8 @@ RSpec.describe Esse::ActiveRecord::Model do
       it 'allows to select which indices will NOT perform :delete request during callbacks' do
         model_class = Class.new(State) do
           include Esse::ActiveRecord::Model
-          index_callbacks 'states:state', on: %i[destroy]
-          index_callbacks 'geographies:state', on: %i[destroy]
+          index_callback 'states:state', on: %i[destroy]
+          index_callback 'geographies:state', on: %i[destroy]
         end
         model = create_record(model_class, name: 'Illinois')
 
