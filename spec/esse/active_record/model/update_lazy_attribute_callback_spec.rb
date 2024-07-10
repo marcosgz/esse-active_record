@@ -35,9 +35,9 @@ RSpec.describe Esse::ActiveRecord::Model, '.update_lazy_attribute_callback' do
     model_class.update_lazy_attribute_callback('states:state', :field, custom: 'value') { :ok }
     expect(model_class.esse_callbacks).to a_hash_including(
       'states:state' => a_hash_including(
-        update_lazy_attribute_on_create: match_array([Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)]),
-        update_lazy_attribute_on_update: match_array([Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)]),
-        update_lazy_attribute_on_destroy: match_array([Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)]),
+        update_lazy_attribute_on_create: contain_exactly(Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)),
+        update_lazy_attribute_on_update: contain_exactly(Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)),
+        update_lazy_attribute_on_destroy: contain_exactly(Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)),
       )
     )
   end
@@ -52,7 +52,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.update_lazy_attribute_callback' do
       model_class.update_lazy_attribute_callback('states:state', :field, on: %i[create], custom: 'value') { :ok }
       expect(model_class.esse_callbacks).to a_hash_including(
         'states:state' => a_hash_including(
-          update_lazy_attribute_on_create: match_array([Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)]),
+          update_lazy_attribute_on_create: contain_exactly(Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)),
         )
       )
     end
@@ -68,7 +68,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.update_lazy_attribute_callback' do
       model_class.update_lazy_attribute_callback('states:state', :field, on: %i[update], custom: 'value') { :ok }
       expect(model_class.esse_callbacks).to a_hash_including(
         'states:state' => a_hash_including(
-          update_lazy_attribute_on_update: match_array([Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)]),
+          update_lazy_attribute_on_update: contain_exactly(Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)),
         )
       )
     end
@@ -84,7 +84,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.update_lazy_attribute_callback' do
       model_class.update_lazy_attribute_callback('states:state', :field, on: %i[destroy], custom: 'value') { :ok }
       expect(model_class.esse_callbacks).to a_hash_including(
         'states:state' => a_hash_including(
-          update_lazy_attribute_on_destroy: match_array([Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)]),
+          update_lazy_attribute_on_destroy: contain_exactly(Esse::ActiveRecord::Callbacks::UpdateLazyAttribute, { attribute_name: :field, custom: 'value'}, an_instance_of(Proc)),
         )
       )
     end

@@ -39,12 +39,12 @@ RSpec.describe Esse::ActiveRecord::Callbacks do
 
   describe '.registered?' do
     it 'returns false if the callback is not registered' do
-      expect(described_class.registered?(:external, :create)).to eq(false)
+      expect(described_class.registered?(:external, :create)).to be(false)
     end
 
     it 'returns true if the callback is registered' do
       described_class.register_callback(:external, :create, Class.new(Esse::ActiveRecord::Callback))
-      expect(described_class.registered?(:external, :create)).to eq(true)
+      expect(described_class.registered?(:external, :create)).to be(true)
     end
   end
 

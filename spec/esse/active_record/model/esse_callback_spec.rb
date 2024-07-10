@@ -14,13 +14,17 @@ class DummyCallbackRepo
     Thread.current[:dummy_callback_repo] = nil
   end
 end
+
 class DumpTempCallback < Esse::ActiveRecord::Callback
   def call(model)
     DummyCallbackRepo.add [model, options, block_result]
   end
 end
+
 class DumpTempCallbackOnCreate < DumpTempCallback; end
+
 class DumpTempCallbackOnUpdate < DumpTempCallback; end
+
 class DumpTempCallbackOnDestroy < DumpTempCallback; end
 
 RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
@@ -85,7 +89,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
       model_class.esse_callback('states:state', :temp, on: %i[create], custom: 'value') { :ok }
       expect(model_class.esse_callbacks).to a_hash_including(
         'states:state' => a_hash_including(
-          temp_on_create: match_array([DumpTempCallbackOnCreate, {custom: 'value'}, an_instance_of(Proc)]),
+          temp_on_create: contain_exactly(DumpTempCallbackOnCreate, {custom: 'value'}, an_instance_of(Proc)),
         )
       )
     end
@@ -132,7 +136,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
       model_class.esse_callback('states:state', :temp, on: %i[update], custom: 'value') { :ok }
       expect(model_class.esse_callbacks).to a_hash_including(
         'states:state' => a_hash_including(
-          temp_on_update: match_array([DumpTempCallbackOnUpdate, {custom: 'value'}, an_instance_of(Proc)]),
+          temp_on_update: contain_exactly(DumpTempCallbackOnUpdate, {custom: 'value'}, an_instance_of(Proc)),
         )
       )
     end
@@ -182,7 +186,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
       model_class.esse_callback('states:state', :temp, on: %i[destroy], custom: 'value') { :ok }
       expect(model_class.esse_callbacks).to a_hash_including(
         'states:state' => a_hash_including(
-          temp_on_destroy: match_array([DumpTempCallbackOnDestroy, {custom: 'value'}, an_instance_of(Proc)]),
+          temp_on_destroy: contain_exactly(DumpTempCallbackOnDestroy, {custom: 'value'}, an_instance_of(Proc)),
         )
       )
     end
