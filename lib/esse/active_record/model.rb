@@ -52,6 +52,10 @@ module Esse
           esse_callback(index_repo_name, :indexing, on: on, **options, &block)
         end
 
+        # def esse_update_lazy_document_attribute(index_repo_name, attribute_name, on: %i[create update destroy], **options, &block)
+        #   esse_callback(index_repo_name, :update_lazy_attribute, on: on, **options, &block)
+        # end
+
         # Disable indexing for the block execution on model level
         # Example:
         #  User.without_indexing { }
