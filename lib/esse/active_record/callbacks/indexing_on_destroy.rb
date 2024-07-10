@@ -3,6 +3,14 @@
 module Esse::ActiveRecord
   module Callbacks
     class IndexingOnDestroy < Callback
+      def call(model)
+        record = block_result || model
+        document = repo.serialize(record)
+        repo.index.delete(document, **options) if document
+        true
+      rescue Esse::Transport::NotFoundError
+        true
+      end
     end
 
     register_callback(:index, :destroy, IndexingOnDestroy)

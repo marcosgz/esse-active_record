@@ -3,14 +3,15 @@
 module Esse
   module ActiveRecord
     class Callback
-      attr_reader :options, :block
+      attr_reader :repo, :options, :block_result
 
-      def initialize(**kwargs, &block)
+      def initialize(repo:, block_result: nil, **kwargs)
+        @repo = repo
         @options = kwargs
-        @block = block
+        @block_result = block_result
       end
 
-      def call
+      def call(model)
         raise NotImplementedError, 'You must implement #call method'
       end
     end
@@ -42,8 +43,13 @@ module Esse
           @callbacks.key?(:"#{identifier}_on_#{operation}")
         end
 
-        def fetch(identifier, operation)
-          @callbacks[:"#{identifier}_on_#{operation}"]
+        def fetch!(identifier, operation)
+          key = :"#{identifier}_on_#{operation}"
+          if registered?(identifier, operation)
+            [key, @callbacks[key]]
+          else
+            raise ArgumentError, "callback #{identifier} for #{operation} operation not registered"
+          end
         end
       end
     end
