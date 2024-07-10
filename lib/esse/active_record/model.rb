@@ -23,7 +23,7 @@ module Esse
               raise ArgumentError, format('index repository %<name>p already registered %<op>s operation', name: index_repo_name, op: operation_name)
             end
 
-            @esse_callbacks[index_repo_name] ||= {}
+            @esse_callbacks[index_repo_name] = @esse_callbacks[index_repo_name]&.dup || {}
             @esse_callbacks[index_repo_name][identifier] = [klass, options, block]
 
             after_commit(on: event, if: if_enabled) do

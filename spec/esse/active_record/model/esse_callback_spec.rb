@@ -73,6 +73,21 @@ RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
     end
   end
 
+  it 'allows to define multiple callbacks in the same model' do
+    model_class.esse_callback('states:state', :temp, on: :create) { :ok }
+    expect {
+      model_class.esse_callback('states:state', :temp, on: :update) { :ok }
+    }.not_to raise_error
+    expect(model_class.esse_callbacks).to a_hash_including(
+      'states:state' => a_hash_including(
+        temp_on_create: contain_exactly(DumpTempCallbackOnCreate, {}, an_instance_of(Proc)),
+        temp_on_update: contain_exactly(DumpTempCallbackOnUpdate, {}, an_instance_of(Proc)),
+      )
+    )
+    expect(model_class.esse_callbacks).to be_frozen
+    expect(model_class.esse_callbacks['states:state']).to be_frozen
+  end
+
   context 'when on :create' do
     it 'raises an error when the callback is not registered' do
       expect {
