@@ -23,7 +23,7 @@ class DumpTempCallbackOnCreate < DumpTempCallback; end
 class DumpTempCallbackOnUpdate < DumpTempCallback; end
 class DumpTempCallbackOnDestroy < DumpTempCallback; end
 
-RSpec.describe Esse::ActiveRecord::Model do
+RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
   let(:model_class) do
     Class.new(State) do
       include Esse::ActiveRecord::Model
