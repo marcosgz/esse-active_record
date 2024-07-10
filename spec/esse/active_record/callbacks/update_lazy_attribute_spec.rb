@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 RSpec.describe Esse::ActiveRecord::Callbacks::UpdateLazyAttribute do
-  let(:repo) { double('repo') }
+  let(:repo) { instance_double(Esse::Repository) }
 
   describe '.initialize' do
     it 'sets attribute_name' do
