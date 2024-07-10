@@ -41,4 +41,8 @@ module ConfigHelpers
   def with_cluster_config(id: :default, **opts)
     with_config { |c| c.cluster(id).assign(opts) }
   end
+
+  def clear_active_record_hooks
+    Thread.current[Esse::ActiveRecord::Hooks::STORE_STATE_KEY] = nil
+  end
 end

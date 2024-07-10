@@ -48,8 +48,18 @@ module Esse
         #   For namespace, use `/` as the separator.
         # @raise [ArgumentError] when the repo and events are already registered
         # @raise [ArgumentError] when the specified index have multiple repos
-        def index_callback(index_repo_name, on: %i[create update destroy], **options, &block)
-          esse_callback(index_repo_name, :indexing, on: on, **options, &block)
+        def index_callback(index_repo_name, on: %i[create update destroy], with: nil, **options, &block)
+          if with
+            Array(on).each do |event|
+              if on == :update
+                esse_callback(index_repo_name, :indexing, on: event, with: with, **options, &block)
+              else
+                esse_callback(index_repo_name, :indexing, on: event, **options, &block)
+              end
+            end
+          else
+            esse_callback(index_repo_name, :indexing, on: on, **options, &block)
+          end
         end
 
         def update_lazy_attribute_callback(index_repo_name, attribute_name, on: %i[create update destroy], **options, &block)
