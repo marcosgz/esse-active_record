@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 
 git_source(:github) { |repo_name| "https://github.com/#{repo_name}" }
 
-gem 'esse', github: 'marcosgz/esse', branch: 'main'
+gem 'esse', '~> 0.3.0'
 gem 'sqlite3', '~> 1.7.3'
 gem 'activerecord', '~> 5.2'
 gem 'esse-rspec', '~> 0.0.6'
