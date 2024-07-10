@@ -82,7 +82,7 @@ module Esse
         def ensure_registered_model_class!(model_class)
           return if registered_model_class?(model_class)
 
-          raise ArgumentError, "Model class #{model_class} is not registered. The model should inherit from Esse::ActiveRecord::Model and have a `index_callbacks' callback defined"
+          raise ArgumentError, "Model class #{model_class} is not registered. The model should inherit from Esse::ActiveRecord::Model and have a `index_callback' callback defined"
         end
 
         # Check if the given model is enabled for indexing. If no repository is specified, all repositories will be checked.
@@ -147,7 +147,7 @@ module Esse
         # Returns a list of all repositories for the given model
         # @return [Array<Symbol>]
         def model_repos(model_class)
-          expand_index_repos(*model_class.esse_index_repos.keys)
+          expand_index_repos(*model_class.esse_callbacks.keys)
         end
 
         # Returns a list of all repositories for the given model

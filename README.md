@@ -154,7 +154,7 @@ end
 
 ### Indexing Callbacks
 
-The `index_callbacks` callback can be used to automaitcally index or delete documents after commit on create/update/destroy events.
+The `index_callback` callback can be used to automaitcally index or delete documents after commit on create/update/destroy events.
 
 ```ruby
 class UsersIndex < Esse::Index
@@ -173,9 +173,9 @@ class User < ApplicationRecord
   # Using a index and repository as argument. Note that the index name is used instead of the
   # of the constant name. it's so because index and model depends on each other should result in
   # circular dependencies issues.
-  index_callbacks 'users_index:user'
+  index_callback 'users_index:user'
   # Using a block to direct a different object to be indexed
-  index_callbacks('organizations') { user.organization } # The `_index` suffix and repo name  is optional on the index name
+  index_callback('organizations') { user.organization } # The `_index` suffix and repo name  is optional on the index name
 end
 ```
 
@@ -194,7 +194,7 @@ or by some specific list of index or index's repository
 ```ruby
 Esse::ActiveRecord::Hooks.disable!(UsersIndex.repo)
 Esse::ActiveRecord::Hooks.enable!(UsersIndex.repo)
-Esse::ActiveRecord::Hooks.without_indexing(AccountsIndex UsersIndex.repo, ) do
+Esse::ActiveRecord::Hooks.without_indexing(AccountsIndex, UsersIndex.repo) do
   10.times { User.create! }
 end
 ```

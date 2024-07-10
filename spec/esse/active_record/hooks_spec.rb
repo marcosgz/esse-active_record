@@ -6,7 +6,7 @@ RSpec.describe Esse::ActiveRecord::Hooks do
       include Esse::ActiveRecord::Model
 
       Esse::ActiveRecord::Hooks.register_model(self)
-      instance_variable_set(:@esse_index_repos, {
+      instance_variable_set(:@esse_callbacks, {
         AnimalsIndex::Cat => {},
         AnimalsIndex::Dog => {},
       })
@@ -18,7 +18,7 @@ RSpec.describe Esse::ActiveRecord::Hooks do
       include Esse::ActiveRecord::Model
 
       Esse::ActiveRecord::Hooks.register_model(self)
-      instance_variable_set(:@esse_index_repos, {
+      instance_variable_set(:@esse_callbacks, {
         UsersIndex::User => {},
       })
     end
