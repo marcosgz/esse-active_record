@@ -14,7 +14,14 @@ module Esse
 
         def esse_callback(index_repo_name, operation_name, on: %i[create update destroy], **options, &block)
           @esse_callbacks = esse_callbacks.dup
-          if_enabled = -> { Esse::ActiveRecord::Hooks.enabled?(index_repo_name) && Esse::ActiveRecord::Hooks.enabled_for_model?(self.class, index_repo_name) }
+          cb_if = options.delete(:if)
+          cb_unless = options.delete(:unless)
+          if_enabled = -> {
+            (cb_if.nil? || (cb_if.respond_to?(:call) ? instance_exec(&cb_if) : send(cb_if))) &&
+              (cb_unless.nil? || (cb_unless.respond_to?(:call) ? !instance_exec(&cb_unless) : !send(cb_unless))) &&
+              Esse::ActiveRecord::Hooks.enabled?(index_repo_name) &&
+              Esse::ActiveRecord::Hooks.enabled_for_model?(self.class, index_repo_name)
+          }
 
           Array(on).each do |event|
             identifier, klass = Esse::ActiveRecord::Callbacks.fetch!(operation_name, event)
