@@ -88,6 +88,67 @@ RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
     expect(model_class.esse_callbacks['states:state']).to be_frozen
   end
 
+  context 'when passing :if option' do
+    it 'allows to set custom condition using proc' do
+      model_class.esse_callback('states:state', :temp, on: :create, if: -> { name == 'TRUE' }) { :ok }
+
+      model = build_record(model_class, name: 'FALSE')
+      expect { model.save }.not_to change { DummyCallbackRepo.all.size }
+
+      model = build_record(model_class, name: 'TRUE')
+      expect { model.save }.to change { DummyCallbackRepo.all.size }.by(1)
+    end
+
+    it 'allows to set custom condition using method' do
+      model_class.esse_callback('states:state', :temp, on: :create, if: :true?) { :ok }
+
+      model = build_record(model_class, name: 'FALSE')
+      model.define_singleton_method(:true?) { false }
+      expect { model.save }.not_to change { DummyCallbackRepo.all.size }
+
+      model = build_record(model_class, name: 'TRUE')
+      model.define_singleton_method(:true?) { true }
+      expect { model.save }.to change { DummyCallbackRepo.all.size }.by(1)
+    end
+
+    it 'does not override hooks condition' do
+      model_class.esse_callback('states:state', :temp, on: :create, if: -> { name == 'TRUE' }) { :ok }
+      model = build_record(model_class, name: 'TRUE')
+      expect { model_class.without_indexing { model.save } }.not_to change { DummyCallbackRepo.all.size }
+    end
+  end
+
+  context 'when passing :unless option' do
+    it 'allows to set custom condition using proc' do
+      model_class.esse_callback('states:state', :temp, on: :create, unless: -> { name == 'TRUE' }) { :ok }
+
+      model = build_record(model_class, name: 'FALSE')
+      expect { model.save }.to change { DummyCallbackRepo.all.size }.by(1)
+
+      model = build_record(model_class, name: 'TRUE')
+      expect { model.save }.not_to change { DummyCallbackRepo.all.size }
+    end
+
+    it 'allows to set custom condition using method' do
+      model_class.esse_callback('states:state', :temp, on: :create, unless: :true?) { :ok }
+
+      model = build_record(model_class, name: 'FALSE')
+      model.define_singleton_method(:true?) { false }
+      expect { model.save }.to change { DummyCallbackRepo.all.size }.by(1)
+
+      model = build_record(model_class, name: 'TRUE')
+      model.define_singleton_method(:true?) { true }
+      expect { model.save }.not_to change { DummyCallbackRepo.all.size }
+    end
+
+    it 'does not override hooks condition' do
+      model_class.esse_callback('states:state', :temp, on: :create, unless: -> { name == 'TRUE' }) { :ok }
+      model = build_record(model_class, name: 'FALSE')
+
+      expect { model_class.without_indexing { model.save } }.not_to change { DummyCallbackRepo.all.size }
+    end
+  end
+
   context 'when on :create' do
     it 'raises an error when the callback is not registered' do
       expect {
