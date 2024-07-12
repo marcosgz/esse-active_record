@@ -19,8 +19,11 @@ module Esse::ActiveRecord
         update_document(document)
         return true unless document.routing
 
-        prev_record = model.class.new(model.attributes.merge(model.previous_changes.transform_values(&:first))).tap(&:readonly!)
-        prev_document = repo.serialize(prev_record)
+        prev_record = model.class.new
+        model.attributes.merge(model.previous_changes.transform_values(&:first)).each do |key, value|
+          prev_record[key] = value
+        end
+        prev_document = repo.serialize(prev_record.tap(&:readonly!))
 
         return true unless prev_document
         return true if [prev_document.id, prev_document.routing].include?(nil)
