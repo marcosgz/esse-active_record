@@ -84,7 +84,7 @@ module Esse
       end
 
       def each_batch_ids
-        dataset.select(:id).except(:includes, :preload).find_in_batches(**batch_options) do |rows|
+        dataset.select(:id).except(:includes, :preload, :eager_load).find_in_batches(**batch_options) do |rows|
           yield(rows.map(&:id))
         end
       end
