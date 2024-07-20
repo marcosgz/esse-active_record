@@ -6,7 +6,7 @@ module Esse::ActiveRecord
       def call(model)
         record = block_result || model
         document = repo.serialize(record)
-        repo.index.index(document, **options) if document
+        repo.index.index(document, **options) if document && !document.ignore_on_index?
         true
       end
     end
