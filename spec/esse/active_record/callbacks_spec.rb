@@ -58,7 +58,7 @@ RSpec.describe Esse::ActiveRecord::Callbacks do
     it 'returns the callback class' do
       klass = Class.new(Esse::ActiveRecord::Callback)
       described_class.register_callback(:external, :create, klass)
-      expect(described_class.fetch!(:external, :create)).to eq([:external_on_create, klass])
+      expect(described_class.fetch!(:external, :create)).to eq([:create_external, klass])
     end
   end
 end

@@ -27,7 +27,7 @@ module Esse
             raise ArgumentError, 'callback_class must be a subclass of Esse::ActiveRecord::Callback'
           end
 
-          key = :"#{identifier}_on_#{operation}"
+          key = [operation, identifier].join('_').to_sym
 
           @callbacks = @callbacks ? @callbacks.dup : {}
           if @callbacks.key?(key)
@@ -42,11 +42,12 @@ module Esse
         def registered?(identifier, operation)
           return false unless @callbacks
 
-          @callbacks.key?(:"#{identifier}_on_#{operation}")
+          key = [operation, identifier].join('_').to_sym
+          @callbacks.key?(key)
         end
 
         def fetch!(identifier, operation)
-          key = :"#{identifier}_on_#{operation}"
+          key = [operation, identifier].join('_').to_sym
           if registered?(identifier, operation)
             [key, @callbacks[key]]
           else
