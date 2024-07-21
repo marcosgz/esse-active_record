@@ -12,7 +12,7 @@ module Esse
           @esse_callbacks ||= {}.freeze
         end
 
-        def esse_callback(index_repo_name, operation_name, on: %i[create update destroy], **options, &block)
+        def esse_callback(index_repo_name, operation_name, on: %i[create update destroy], identifier_suffix: nil, **options, &block)
           @esse_callbacks = esse_callbacks.dup
           cb_if = options.delete(:if)
           cb_unless = options.delete(:unless)
@@ -25,6 +25,9 @@ module Esse
 
           Array(on).each do |event|
             identifier, klass = Esse::ActiveRecord::Callbacks.fetch!(operation_name, event)
+            if identifier_suffix
+              identifier = :"#{identifier}_#{identifier_suffix}"
+            end
 
             if @esse_callbacks.dig(index_repo_name, identifier)
               raise ArgumentError, format('index repository %<name>p already registered %<op>s operation', name: index_repo_name, op: operation_name)
@@ -71,7 +74,7 @@ module Esse
 
         def update_lazy_attribute_callback(index_repo_name, attribute_name, on: %i[create update destroy], **options, &block)
           options[:attribute_name] = attribute_name
-          esse_callback(index_repo_name, :update_lazy_attribute, on: on, **options, &block)
+          esse_callback(index_repo_name, :update_lazy_attribute, identifier_suffix: attribute_name.to_sym, on: on, **options, &block)
         end
 
         # Disable indexing for the block execution on model level
