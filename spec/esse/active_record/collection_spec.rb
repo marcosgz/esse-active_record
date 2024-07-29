@@ -146,6 +146,22 @@ RSpec.describe Esse::ActiveRecord::Collection do
     end
   end
 
+  describe '#count' do
+    it 'raises NotImplementedError when scope is not defined on the collection class' do
+      expect {
+        collection = described_class.new
+        collection.count
+      }.to raise_error(NotImplementedError)
+    end
+
+    it 'returns the count of the dataset' do
+      collection = Class.new(described_class)
+      collection.base_scope = -> { Animal.all }
+      expect(collection.new.count).to eq(Animal.count)
+      expect(collection.new.size).to eq(Animal.count)
+    end
+  end
+
   describe '#dataset' do
     it 'returns an ActiveRecord::Relation' do
       collection = Class.new(described_class)

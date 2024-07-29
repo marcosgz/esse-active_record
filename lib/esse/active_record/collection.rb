@@ -89,6 +89,11 @@ module Esse
         end
       end
 
+      def count
+        dataset.except(:includes, :preload, :eager_load).count
+      end
+      alias_method :size, :count
+
       def dataset(**kwargs)
         query = self.class.base_scope&.call || raise(NotImplementedError, "No scope defined for #{self.class}")
         query = query.except(:order, :limit, :offset)
