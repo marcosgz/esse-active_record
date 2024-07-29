@@ -28,9 +28,6 @@ RSpec/ExampleLength:
 RSpec/MessageSpies:
   Enabled: false
 
-RSpec/FilePath:
-  Enabled: false
-
 Layout/SpaceInsideHashLiteralBraces:
   Enabled: false
 
