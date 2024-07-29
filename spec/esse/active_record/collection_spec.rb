@@ -97,6 +97,71 @@ RSpec.describe Esse::ActiveRecord::Collection do
     end
   end
 
+  describe '#each_batch_ids' do
+    it 'raises NotImplementedError when scope is not defined on the collection class' do
+      expect {
+        collection = described_class.new
+        collection.each_batch_ids
+      }.to raise_error(NotImplementedError)
+    end
+
+    it 'returns an Enumerator with a relation instance' do
+      collection = Class.new(described_class)
+      collection.base_scope = -> { Animal.all }
+      expect { |b| collection.new.each_batch_ids(&b) }.not_to yield_control
+    end
+
+    context 'with start and batch_size' do
+      let(:collection_class) do
+        klass = Class.new(described_class)
+        klass.base_scope = -> { Dog }
+        klass
+      end
+
+      let!(:dogs) do
+        Array.new(3) { |i| Dog.create!(name: "Dog #{i.next}") }
+      end
+
+      after do
+        Dog.destroy_all
+      end
+
+      it 'stream entity ids in batches according to the :batch_size option' do
+        instance = collection_class.new(batch_size: 1)
+
+        expect { |b| instance.each_batch_ids(&b) }.to yield_successive_args(*dogs.map { |doc| [doc.id] })
+      end
+
+      it 'stream entity ids in batches according to the :batch_size option and :start option' do
+        instance = collection_class.new(batch_size: 1, start: dogs[1].id)
+
+        expect { |b| instance.each_batch_ids(&b) }.to yield_successive_args(*dogs[1..2].map { |doc| [doc.id] })
+      end
+
+      it 'stream entity ids in batches according to the :batch_size option and :finish option' do
+        instance = collection_class.new(batch_size: 1, finish: dogs[1].id)
+
+        expect { |b| instance.each_batch_ids(&b) }.to yield_successive_args(*dogs[0..1].map { |doc| [doc.id] })
+      end
+    end
+  end
+
+  describe '#count' do
+    it 'raises NotImplementedError when scope is not defined on the collection class' do
+      expect {
+        collection = described_class.new
+        collection.count
+      }.to raise_error(NotImplementedError)
+    end
+
+    it 'returns the count of the dataset' do
+      collection = Class.new(described_class)
+      collection.base_scope = -> { Animal.all }
+      expect(collection.new.count).to eq(Animal.count)
+      expect(collection.new.size).to eq(Animal.count)
+    end
+  end
+
   describe '#dataset' do
     it 'returns an ActiveRecord::Relation' do
       collection = Class.new(described_class)

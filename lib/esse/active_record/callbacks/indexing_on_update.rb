@@ -41,6 +41,8 @@ module Esse::ActiveRecord
       protected
 
       def update_document(document)
+        return if document.ignore_on_index?
+
         if update_with == :update
           begin
             repo.index.update(document, **options)

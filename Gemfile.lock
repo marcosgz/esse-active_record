@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    esse-active_record (0.3.4)
+    esse-active_record (0.3.5)
       activerecord (>= 4.2, < 8)
       esse (>= 0.3.0)
 
@@ -39,7 +39,7 @@ GEM
     elasticsearch-transport (7.17.10)
       faraday (>= 1, < 3)
       multi_json
-    esse (0.3.1)
+    esse (0.3.4)
       multi_json
       thor (>= 0.19)
     esse-rspec (0.0.6)
@@ -142,7 +142,7 @@ DEPENDENCIES
   awesome_print
   dotenv
   elasticsearch (~> 7.17, >= 7.17.10)
-  esse (~> 0.3.1)
+  esse (~> 0.3.4)
   esse-active_record!
   esse-rspec (~> 0.0.6)
   pry

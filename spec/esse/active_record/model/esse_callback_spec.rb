@@ -80,8 +80,8 @@ RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
     }.not_to raise_error
     expect(model_class.esse_callbacks).to a_hash_including(
       'states:state' => a_hash_including(
-        temp_on_create: contain_exactly(DumpTempCallbackOnCreate, {}, an_instance_of(Proc)),
-        temp_on_update: contain_exactly(DumpTempCallbackOnUpdate, {}, an_instance_of(Proc)),
+        create_temp: contain_exactly(DumpTempCallbackOnCreate, {}, an_instance_of(Proc)),
+        update_temp: contain_exactly(DumpTempCallbackOnUpdate, {}, an_instance_of(Proc)),
       )
     )
     expect(model_class.esse_callbacks).to be_frozen
@@ -165,7 +165,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
       model_class.esse_callback('states:state', :temp, on: %i[create], custom: 'value') { :ok }
       expect(model_class.esse_callbacks).to a_hash_including(
         'states:state' => a_hash_including(
-          temp_on_create: contain_exactly(DumpTempCallbackOnCreate, {custom: 'value'}, an_instance_of(Proc)),
+          create_temp: contain_exactly(DumpTempCallbackOnCreate, {custom: 'value'}, an_instance_of(Proc)),
         )
       )
     end
@@ -212,7 +212,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
       model_class.esse_callback('states:state', :temp, on: %i[update], custom: 'value') { :ok }
       expect(model_class.esse_callbacks).to a_hash_including(
         'states:state' => a_hash_including(
-          temp_on_update: contain_exactly(DumpTempCallbackOnUpdate, {custom: 'value'}, an_instance_of(Proc)),
+          update_temp: contain_exactly(DumpTempCallbackOnUpdate, {custom: 'value'}, an_instance_of(Proc)),
         )
       )
     end
@@ -262,7 +262,7 @@ RSpec.describe Esse::ActiveRecord::Model, '.esse_callback' do
       model_class.esse_callback('states:state', :temp, on: %i[destroy], custom: 'value') { :ok }
       expect(model_class.esse_callbacks).to a_hash_including(
         'states:state' => a_hash_including(
-          temp_on_destroy: contain_exactly(DumpTempCallbackOnDestroy, {custom: 'value'}, an_instance_of(Proc)),
+          destroy_temp: contain_exactly(DumpTempCallbackOnDestroy, {custom: 'value'}, an_instance_of(Proc)),
         )
       )
     end

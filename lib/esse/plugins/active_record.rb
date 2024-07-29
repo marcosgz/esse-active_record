@@ -11,7 +11,7 @@ module Esse
         # @option options [Symbol] :batch_size The batch size for the collection
         def collection(*args, **kwargs, &block)
           unless model_or_relation?(args.first)
-            return super(*args, **kwargs, &block)
+            return super
           end
           model_class = args.shift
 

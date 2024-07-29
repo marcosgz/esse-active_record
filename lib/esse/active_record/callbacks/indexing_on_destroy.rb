@@ -6,7 +6,7 @@ module Esse::ActiveRecord
       def call(model)
         record = block_result || model
         document = repo.serialize(record)
-        repo.index.delete(document, **options) if document
+        repo.index.delete(document, **options) if document && !document.ignore_on_delete?
         true
       rescue Esse::Transport::NotFoundError
         true

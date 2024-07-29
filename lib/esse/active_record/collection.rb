@@ -83,6 +83,17 @@ module Esse
         end
       end
 
+      def each_batch_ids
+        dataset.select(:id).except(:includes, :preload, :eager_load).find_in_batches(**batch_options) do |rows|
+          yield(rows.map(&:id))
+        end
+      end
+
+      def count
+        dataset.except(:includes, :preload, :eager_load).count
+      end
+      alias_method :size, :count
+
       def dataset(**kwargs)
         query = self.class.base_scope&.call || raise(NotImplementedError, "No scope defined for #{self.class}")
         query = query.except(:order, :limit, :offset)
