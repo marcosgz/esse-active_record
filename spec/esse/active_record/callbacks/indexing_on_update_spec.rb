@@ -6,9 +6,9 @@ RSpec.describe Esse::ActiveRecord::Callbacks::IndexingOnUpdate do
   describe '.initialize' do
     let(:repo) { instance_double(Esse::Repository) }
 
-    it 'sets update_with' do
+    it 'sets @with' do
       callback = described_class.new(repo: repo, with: :update)
-      expect(callback.update_with).to eq(:update)
+      expect(callback.instance_variable_get(:@with)).to eq(:update)
     end
 
     it 'sets options' do
@@ -91,6 +91,31 @@ RSpec.describe Esse::ActiveRecord::Callbacks::IndexingOnUpdate do
           id: state.id,
           index: StatesIndex.index_name,
           body: {name: 'IL'},
+        ).and_return(ok_response)
+
+        state.update!(name: 'IL')
+      end
+    end
+
+    context 'when not calling with in a repository with lazy attributes' do
+      before do
+        StatesIndex::State.lazy_document_attribute :total_counties do |docs|
+          ::County.where(state_id: docs.map(&:id)).group(:state_id).count
+        end
+      end
+
+      after do
+        StatesIndex::State.instance_variable_set(:@lazy_document_attributes, {}.freeze)
+      end
+
+      it { expect(StatesIndex::State.lazy_document_attributes).not_to be_empty }
+
+      it 'updates the record using :update action to avoid losing lazy attributes' do
+        expect(StatesIndex).to receive(:update).and_call_original
+        expect(StatesIndex).to esse_receive_request(:update).with(
+          id: state.id,
+          index: StatesIndex.index_name,
+          body: {doc: { name: 'IL' } },
         ).and_return(ok_response)
 
         state.update!(name: 'IL')

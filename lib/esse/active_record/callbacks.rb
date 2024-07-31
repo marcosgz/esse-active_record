@@ -5,8 +5,9 @@ module Esse
     class Callback
       attr_reader :repo, :options, :block_result
 
-      def initialize(repo:, block_result: nil, **kwargs)
+      def initialize(repo:, block_result: nil, with: nil, **kwargs)
         @repo = repo
+        @with = with
         @options = kwargs
         @block_result = block_result
       end
