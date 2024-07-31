@@ -3,13 +3,6 @@
 module Esse::ActiveRecord
   module Callbacks
     class IndexingOnUpdate < Callback
-      attr_reader :update_with
-
-      def initialize(with: :index, **kwargs, &block)
-        @update_with = with
-        super(**kwargs, &block)
-      end
-
       def call(model)
         record = block_result || model
 
@@ -43,7 +36,7 @@ module Esse::ActiveRecord
       def update_document(document)
         return if document.ignore_on_index?
 
-        if update_with == :update
+        if @with == :update || (@with.nil? && repo.lazy_document_attributes.any?)
           begin
             repo.index.update(document, **options)
           rescue Esse::Transport::NotFoundError
