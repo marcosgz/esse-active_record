@@ -90,7 +90,7 @@ module Esse
       end
 
       def count
-        dataset.except(:includes, :preload, :eager_load, :order, :limit, :offset).count
+        dataset.except(:includes, :preload, :eager_load, :group, :order, :limit, :offset).count
       end
       alias_method :size, :count
 
