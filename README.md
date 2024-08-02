@@ -210,6 +210,35 @@ User.without_indexing(AccountsIndex) do
 end
 ```
 
+### Asynchronous Indexing
+
+If you are using a background job processor like Sidekiq or Faktory, you may be interested in indexing documents asynchronously. For this, you can use the [esse-async_indexing](https://github.com/marcosgz/esse-async_indexing) gem.
+
+Add the `esse-async_indexing` gem to your Gemfile and require the `esse/async_indexing/active_record` file in your application initialization. Make sure to setup the gem configurationg according to the [esse-async_indexing documentation](https://github.com/marcosgz/esse-async_indexing).
+
+
+```ruby
+require 'esse/async_indexing/active_record'
+```
+
+Then, you can use the `async_index_callback` or `async_update_lazy_attribute_callback` methods to push the indexing job to the background job processor.
+
+```diff
+class City < ApplicationRecord
+  include Esse::ActiveRecord::Model
+- include Esse::ActiveRecord::Model
++ include Esse::AsyncIndexing::ActiveRecord::Model
+
+  belongs_to :state, optional: true
+
+
+  async_indexing_callback('geos_index:city') { id }
+- index_callback('geos_index:city') { id }
+- update_lazy_attribute_callback('geos_index:state', 'cities_count', if: :state_id?) { state_id }
++ async_index_callback('geos_index:city', service_name: :sidekiq) { id }
++ async_update_lazy_attribute_callback('geos_index:state', 'cities_count', if: :state_id?, service_name: :sidekiq) { state_id }
+end
+```
 
 ## Development
 
