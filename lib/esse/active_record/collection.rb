@@ -21,6 +21,12 @@ module Esse
       class_attribute :batch_contexts
       self.batch_contexts = {}
 
+      # Connects to a database or role (ex writing, reading, or another custom role) for the collection query
+      # @param [Symbol] role The role to connect to
+      # @param [Symbol] shard The shard to connect to
+      class_attribute :connect_with
+      self.connect_with = nil
+
       class << self
         def inspect
           return super unless self < Esse::ActiveRecord::Collection
@@ -40,6 +46,7 @@ module Esse
 
           subclass.scopes = scopes.dup
           subclass.batch_contexts = batch_contexts.dup
+          subclass.connect_with = connect_with&.dup
         end
 
         def scope(name, proc = nil, override: false, &block)
@@ -56,6 +63,10 @@ module Esse
           raise ArgumentError, "batch_context `#{name}' already defined" if !override && batch_contexts.key?(name.to_sym)
 
           batch_contexts[name.to_sym] = proc
+        end
+
+        def connected_to(**kwargs)
+          self.connect_with = kwargs
         end
       end
 
@@ -74,23 +85,29 @@ module Esse
       end
 
       def each
-        dataset.find_in_batches(**batch_options) do |rows|
-          kwargs = params.dup
-          self.class.batch_contexts.each do |name, proc|
-            kwargs[name] = proc.call(rows, **params)
+        with_connection do
+          dataset.find_in_batches(**batch_options) do |rows|
+            kwargs = params.dup
+            self.class.batch_contexts.each do |name, proc|
+              kwargs[name] = proc.call(rows, **params)
+            end
+            yield(rows, **kwargs)
           end
-          yield(rows, **kwargs)
         end
       end
 
       def each_batch_ids
-        dataset.select(:id).except(:includes, :preload, :eager_load).find_in_batches(**batch_options) do |rows|
-          yield(rows.map(&:id))
+        with_connection do
+          dataset.select(:id).except(:includes, :preload, :eager_load).find_in_batches(**batch_options) do |rows|
+            yield(rows.map(&:id))
+          end
         end
       end
 
       def count
-        dataset.except(:includes, :preload, :eager_load, :group, :order, :limit, :offset).count
+        with_connection do
+          dataset.except(:includes, :preload, :eager_load, :group, :order, :limit, :offset).count
+        end
       end
       alias_method :size, :count
 
@@ -126,6 +143,16 @@ module Esse
       end
 
       protected
+
+      def with_connection
+        if self.class.connect_with&.any?
+          ::ActiveRecord::Base.connected_to(**self.class.connect_with) do
+            yield
+          end
+        else
+          yield
+        end
+      end
 
       def batch_options
         {

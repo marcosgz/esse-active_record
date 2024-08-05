@@ -6,6 +6,7 @@ require 'esse/active_record'
 require 'esse/rspec'
 
 require 'support/config_helpers'
+require 'support/sharding_hook'
 require 'support/webmock'
 require 'support/models'
 require 'pry'

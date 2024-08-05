@@ -1,7 +1,32 @@
 if ENV['VERBOSE']
   ActiveRecord::Base.logger = Logger.new($stdout)
 end
-ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
+
+db_env = ActiveRecord::ConnectionHandling::DEFAULT_ENV.call.to_s
+db_path = '/tmp/esse-active_record.db'
+db_config = {
+  adapter: 'sqlite3',
+  database: db_path,
+}
+
+if File.exist?(db_path)
+  File.delete(db_path)
+end
+
+if ::ActiveRecord.gem_version >= Gem::Version.new('6.0.0')
+  ActiveRecord::Base.configurations = { db_env => { primary: db_config, secondary: db_config } }
+  ActiveRecord::Base.establish_connection(:primary)
+  class ApplicationRecord < ActiveRecord::Base
+    self.abstract_class = true
+    connects_to database: { writing: :primary, reading: :secondary }
+  end
+else
+  ActiveRecord::Base.configurations = { db_env => db_config }
+  ActiveRecord::Base.establish_connection(db_config)
+  class ApplicationRecord < ActiveRecord::Base
+    self.abstract_class = true
+  end
+end
 
 ActiveRecord::Schema.define do
   self.verbose = false
@@ -27,7 +52,7 @@ ActiveRecord::Schema.define do
   end
 end
 
-class Animal < ActiveRecord::Base
+class Animal < ApplicationRecord
 end
 
 class Dog < Animal
@@ -36,11 +61,11 @@ end
 class Cat < Animal
 end
 
-class State < ActiveRecord::Base
+class State < ApplicationRecord
   has_many :counties
 end
 
-class County < ActiveRecord::Base
+class County < ApplicationRecord
   belongs_to :state
 end
 
