@@ -2,19 +2,24 @@ if ENV['VERBOSE']
   ActiveRecord::Base.logger = Logger.new($stdout)
 end
 
-ACTIVE_RECORD_DEFAULT_ENV = ActiveRecord::ConnectionHandling::DEFAULT_ENV.call.to_sym
+active_record_env = ActiveRecord::ConnectionHandling::DEFAULT_ENV.call
 
 ActiveRecord::Base.configurations = {
-  ACTIVE_RECORD_DEFAULT_ENV.to_s => {
-    'adapter' => 'sqlite3',
-    'database' => ':memory:',
-  },
-  'replica' => {
-    'adapter' => 'sqlite3',
-    'database' => ':memory:',
-  },
+  active_record_env => {
+    primary: {
+      adapter: 'sqlite3',
+      database: '/tmp/esse-active_record.db',
+    },
+    secondary: {
+      adapter: 'sqlite3',
+      database: '/tmp/esse-active_record.db',
+    }
+  }
 }
-ActiveRecord::Base.establish_connection(ACTIVE_RECORD_DEFAULT_ENV)
+if File.exist?('/tmp/esse-active_record.db')
+  File.delete('/tmp/esse-active_record.db')
+end
+ActiveRecord::Base.establish_connection(:primary)
 
 ActiveRecord::Schema.define do
   self.verbose = false
@@ -44,7 +49,7 @@ class ApplicationRecord < ActiveRecord::Base
   self.abstract_class = true
 
   if ::ActiveRecord.gem_version >= Gem::Version.new('6.0.0')
-    connects_to database: { writing: ACTIVE_RECORD_DEFAULT_ENV, reading: :replica }
+    connects_to database: { writing: :primary, reading: :secondary }
   end
 end
 
