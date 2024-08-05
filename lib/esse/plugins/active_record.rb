@@ -18,6 +18,7 @@ module Esse
           repo = Class.new(Esse::ActiveRecord::Collection)
           repo.base_scope = -> { model_class }
           repo.batch_size = kwargs.delete(:batch_size) if kwargs.key?(:batch_size)
+          repo.connect_with = kwargs.delete(:connect_with) if kwargs.key?(:connect_with)
           repo.class_eval(&block) if block
 
           super(repo, *args, **kwargs)

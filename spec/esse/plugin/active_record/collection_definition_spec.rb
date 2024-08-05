@@ -61,6 +61,20 @@ RSpec.describe Esse::Plugins::ActiveRecord, '.collection' do # rubocop:disable R
         expect(col.batch_size).to eq(10)
       end
 
+      it 'define a collection with custom connect_with' do
+        expect {
+          stub_esse_index(:animals) do
+            plugin :active_record
+
+            repository :animal do
+              collection(Animal, connect_with: { role: :reading })
+            end
+          end
+        }.not_to raise_error
+        expect(col = AnimalsIndex.repo.instance_variable_get(:@collection_proc)).to be < Esse::ActiveRecord::Collection
+        expect(col.connect_with).to eq(role: :reading)
+      end
+
       it 'evaluates the block in the Esse::ActiveRecord::Collection' do
         expect {
           stub_esse_index(:animals) do
