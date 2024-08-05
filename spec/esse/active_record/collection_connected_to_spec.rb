@@ -10,7 +10,7 @@ RSpec.describe Esse::ActiveRecord::Collection, '.connected_to' do
     end
   end
 
-  describe '#each using custom connection', sharding: true do
+  describe '#each using custom connection', :sharding do
     let(:collection_class) do
       klass = Class.new(described_class)
       klass.base_scope = -> { State }
@@ -28,7 +28,7 @@ RSpec.describe Esse::ActiveRecord::Collection, '.connected_to' do
     end
   end
 
-  describe '#each_batch_ids using custom connection', sharding: true do
+  describe '#each_batch_ids using custom connection', :sharding do
     let(:collection_class) do
       klass = Class.new(described_class)
       klass.base_scope = -> { State }
@@ -46,7 +46,7 @@ RSpec.describe Esse::ActiveRecord::Collection, '.connected_to' do
     end
   end
 
-  describe '#count using custom connection', sharding: true do
+  describe '#count using custom connection', :sharding do
     let(:collection_class) do
       klass = Class.new(described_class)
       klass.base_scope = -> { State }
