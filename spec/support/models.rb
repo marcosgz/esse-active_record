@@ -2,24 +2,31 @@ if ENV['VERBOSE']
   ActiveRecord::Base.logger = Logger.new($stdout)
 end
 
-active_record_env = ActiveRecord::ConnectionHandling::DEFAULT_ENV.call
-
-ActiveRecord::Base.configurations = {
-  active_record_env => {
-    primary: {
-      adapter: 'sqlite3',
-      database: '/tmp/esse-active_record.db',
-    },
-    secondary: {
-      adapter: 'sqlite3',
-      database: '/tmp/esse-active_record.db',
-    }
-  }
+db_env = ActiveRecord::ConnectionHandling::DEFAULT_ENV.call.to_s
+db_path = '/tmp/esse-active_record.db'
+db_config = {
+  adapter: 'sqlite3',
+  database: db_path,
 }
-if File.exist?('/tmp/esse-active_record.db')
-  File.delete('/tmp/esse-active_record.db')
+
+if File.exist?(db_path)
+  File.delete(db_path)
 end
-ActiveRecord::Base.establish_connection(:primary)
+
+if ::ActiveRecord.gem_version >= Gem::Version.new('6.0.0')
+  ActiveRecord::Base.configurations = { db_env => { primary: db_config, secondary: db_config } }
+  ActiveRecord::Base.establish_connection(:primary)
+  class ApplicationRecord < ActiveRecord::Base
+    self.abstract_class = true
+    connects_to database: { writing: :primary, reading: :secondary }
+  end
+else
+  ActiveRecord::Base.configurations = { db_env => db_config }
+  ActiveRecord::Base.establish_connection(db_config)
+  class ApplicationRecord < ActiveRecord::Base
+    self.abstract_class = true
+  end
+end
 
 ActiveRecord::Schema.define do
   self.verbose = false
@@ -42,14 +49,6 @@ ActiveRecord::Schema.define do
     t.column :iso_country, :string # ISO 3166-1 country/territory code
     t.column :state_id, :integer
     t.timestamps
-  end
-end
-
-class ApplicationRecord < ActiveRecord::Base
-  self.abstract_class = true
-
-  if ::ActiveRecord.gem_version >= Gem::Version.new('6.0.0')
-    connects_to database: { writing: :primary, reading: :secondary }
   end
 end
 
