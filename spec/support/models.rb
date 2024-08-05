@@ -1,7 +1,20 @@
 if ENV['VERBOSE']
   ActiveRecord::Base.logger = Logger.new($stdout)
 end
-ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
+
+ACTIVE_RECORD_DEFAULT_ENV = ActiveRecord::ConnectionHandling::DEFAULT_ENV.call.to_sym
+
+ActiveRecord::Base.configurations = {
+  ACTIVE_RECORD_DEFAULT_ENV.to_s => {
+    'adapter' => 'sqlite3',
+    'database' => ':memory:',
+  },
+  'replica' => {
+    'adapter' => 'sqlite3',
+    'database' => ':memory:',
+  },
+}
+ActiveRecord::Base.establish_connection(ACTIVE_RECORD_DEFAULT_ENV)
 
 ActiveRecord::Schema.define do
   self.verbose = false
@@ -27,7 +40,15 @@ ActiveRecord::Schema.define do
   end
 end
 
-class Animal < ActiveRecord::Base
+class ApplicationRecord < ActiveRecord::Base
+  self.abstract_class = true
+
+  if ::ActiveRecord.gem_version >= Gem::Version.new('6.0.0')
+    connects_to database: { writing: ACTIVE_RECORD_DEFAULT_ENV, reading: :replica }
+  end
+end
+
+class Animal < ApplicationRecord
 end
 
 class Dog < Animal
@@ -36,11 +57,11 @@ end
 class Cat < Animal
 end
 
-class State < ActiveRecord::Base
+class State < ApplicationRecord
   has_many :counties
 end
 
-class County < ActiveRecord::Base
+class County < ApplicationRecord
   belongs_to :state
 end
 
