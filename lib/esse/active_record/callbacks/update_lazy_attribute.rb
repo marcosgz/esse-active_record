@@ -11,10 +11,10 @@ module Esse::ActiveRecord
       end
 
       def call(model)
-        related_ids = Array(block_result || model.id)
+        related_ids = Esse::ArrayUtils.wrap(block_result || model.id)
         return true if related_ids.empty?
 
-        repo.update_documents_attribute(attribute_name, *related_ids, **options)
+        repo.update_documents_attribute(attribute_name, related_ids, options)
 
         true
       end

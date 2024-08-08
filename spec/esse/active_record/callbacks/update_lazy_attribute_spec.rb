@@ -53,7 +53,7 @@ RSpec.describe Esse::ActiveRecord::Callbacks::UpdateLazyAttribute do
     it 'bulk update the state :total_counties attribute when the county is created' do
       state = create_record(State, name: 'Illinois')
       county = build_record(county_class, name: 'Cook', state: state)
-      expect(StatesIndex::State).to receive(:update_documents_attribute).with(:total_counties, state.id, **{}).and_call_original
+      expect(StatesIndex::State).to receive(:update_documents_attribute).with(:total_counties, [state.id], {}).and_call_original
       expect(StatesIndex).to esse_receive_request(:bulk).with(
         index: StatesIndex.index_name,
         body: [
