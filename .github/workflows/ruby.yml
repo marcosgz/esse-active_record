@@ -34,6 +34,8 @@ jobs:
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install sqlite3
+        run: sudo apt-get install -y libsqlite3-dev
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
