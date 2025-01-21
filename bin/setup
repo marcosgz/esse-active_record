@@ -3,5 +3,11 @@ set -euo pipefail
 IFS=$'\n\t'
 set -vx
 
-bundle install
-find ci -type f \( -iname "Gemfile.*" ! -iname "*.lock" \) -exec bundle install --gemfile {} \;
+mise exec ruby@2.7.7 -- bundle install
+mise exec ruby@2.7.7 -- bundle install --gemfile ci/Gemfile.rails-7.1
+mise exec ruby@2.7.7 -- bundle install --gemfile ci/Gemfile.rails-7.0
+mise exec ruby@2.7.7 -- bundle install --gemfile ci/Gemfile.rails-6.0
+mise exec ruby@2.7.7 -- bundle install --gemfile ci/Gemfile.rails-6.1
+mise exec ruby@2.7.7 -- bundle install --gemfile ci/Gemfile.rails-5.2
+mise exec ruby@3.2.2 -- bundle install --gemfile ci/Gemfile.rails-8.0
+mise exec ruby@3.2.2 -- bundle install --gemfile ci/Gemfile.rails-7.2

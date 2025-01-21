@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## 0.3.9 - 2025-01-21
 * Move hooks to a separate gem, [esse-hooks](https://github.com/marcosgz/esse-hooks)
+* Add rails 8 support
 
 ## 0.3.8 - 2024-08-08
 * Add `connect_with:` option to the collection definition.
