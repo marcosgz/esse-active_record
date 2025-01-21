@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'esse', '>= 0.3.0'
+  spec.add_dependency 'esse-hooks', '>= 0.0.0'
   spec.add_dependency 'activerecord', '>= 4.2', '< 8'
   spec.add_development_dependency 'awesome_print'
   spec.add_development_dependency 'dotenv'

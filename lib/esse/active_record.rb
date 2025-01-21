@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'esse'
+require 'esse-hooks'
 require 'active_record'
 require_relative 'active_record/version'
 require_relative 'active_record/callbacks'

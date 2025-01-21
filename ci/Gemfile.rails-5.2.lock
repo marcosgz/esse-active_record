@@ -1,9 +1,10 @@
 PATH
   remote: ..
   specs:
-    esse-active_record (0.3.8)
+    esse-active_record (0.3.9)
       activerecord (>= 4.2, < 8)
       esse (>= 0.3.0)
+      esse-hooks
 
 GEM
   remote: https://rubygems.org/
@@ -45,6 +46,8 @@ GEM
     esse (0.3.4)
       multi_json
       thor (>= 0.19)
+    esse-hooks (0.0.1)
+      esse (>= 0.3.0)
     esse-rspec (0.0.6)
       esse (>= 0.2.4)
       rspec (>= 3)
@@ -156,4 +159,4 @@ DEPENDENCIES
   yard
 
 BUNDLED WITH
-   2.3.22
+   2.3.26
