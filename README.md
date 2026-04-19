@@ -2,6 +2,10 @@
 
 This gem is a [esse](https://github.com/marcosgz/esse) plugin for the ActiveRecord ORM. It provides a set of methods to simplify implementation of ActiveRecord models as datasource of esse indexes.
 
+## Documentation
+
+Full guides, usage examples, and API reference are published at **[gems.marcosz.com.br/esse-active_record](https://gems.marcosz.com.br/esse-active_record/)** — part of the [marcosgz Ruby gem catalogue](https://gems.marcosz.com.br).
+
 ## Installation
 
 Add this line to your application's Gemfile:
