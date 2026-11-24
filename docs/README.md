@@ -55,4 +55,4 @@ Every `User.create!`, `update!`, and `destroy` now syncs to Elasticsearch automa
 
 ## License
 
-MIT.
+GPL-3.0-or-later.
